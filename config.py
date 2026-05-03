@@ -9,7 +9,7 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "your_token_here")
 # ============ DATABASE ============
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://postgres:postgres@localhost:5432/blobis_db"
+    "sqlite:///./blobis.db"
 )
 
 # ============ HUGGING FACE ============
