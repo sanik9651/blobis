@@ -21,6 +21,9 @@ DEBUG = os.getenv("DEBUG", "True") == "True"
 SERVER_HOST = os.getenv("SERVER_HOST", "0.0.0.0")
 SERVER_PORT = int(os.getenv("SERVER_PORT", 8000))
 WEBAPP_URL = os.getenv("WEBAPP_URL", f"http://{SERVER_HOST}:{SERVER_PORT}")
+WEBHOOK_PATH = os.getenv("WEBHOOK_PATH", "/webhook")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL", f"{WEBAPP_URL}{WEBHOOK_PATH}")
+WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", None)
 
 # ============ GAME SETTINGS ============
 DAILY_BONUS = 5

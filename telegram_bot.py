@@ -3,7 +3,7 @@ import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import Application, CommandHandler, ContextTypes
 import aiohttp
-from config import TELEGRAM_BOT_TOKEN, SERVER_HOST, SERVER_PORT, WEBAPP_URL
+from config import TELEGRAM_BOT_TOKEN, WEBAPP_URL, WEBHOOK_URL, WEBHOOK_PATH, WEBHOOK_SECRET
 
 # Logging
 logging.basicConfig(
@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 
 API_BASE_URL = WEBAPP_URL # Используем WEBAPP_URL для доступа к бэкенду, который будет публичным URL на Render.com
 
-# ============ COMMAND HANDLERS ============
+# Инициализация приложения Telegram Bot
+application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда /start - Приветствие и кнопка Web App"""
@@ -24,10 +25,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(f"{API_BASE_URL}/api/user/{user.id}/update", 
-                                  json={"username": user.username}) as resp:
-                pass
+                                   json={"username": user.username}) as resp:
+                if resp.status != 200:
+                    logger.warning(f"Failed to register user {user.id}: {await resp.text()}")
     except Exception as e:
-        logger.error(f"Error registering user: {e}")
+        logger.error(f"Error registering user {user.id}: {e}")
     
     welcome_text = (
         f"🎣 *Добро пожаловать в BLOBIS\\!* 🐟\n\n"
@@ -55,21 +57,32 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(help_text, parse_mode="MarkdownV2")
 
-# ============ MAIN ============
-
-def main():
-    """Запуск бота"""
-    if not TELEGRAM_BOT_TOKEN:
-        logger.error("TELEGRAM_BOT_TOKEN not found!")
-        return
-
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-    
+def setup_bot():
+    """Настройка обработчиков команд бота."""
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
-    
-    print("🤖 Blobis Bot is running (Web App only mode)...")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    return application
+
+async def start_webhook_bot():
+    """Запуск бота в режиме вебхуков."""
+    if not TELEGRAM_BOT_TOKEN:
+        logger.error("TELEGRAM_BOT_TOKEN не найден!")
+        return
+
+    logger.info(f"Setting webhook for bot to {WEBHOOK_URL}")
+    await application.bot.set_webhook(url=WEBHOOK_URL, secret_token=WEBHOOK_SECRET)
+    logger.info("🤖 Blobis Bot is configured for webhooks.")
+
+async def process_update(request_body: dict):
+    """Обработка входящих обновлений от Telegram."""
+    update = Update.de_json(request_body, application.bot)
+    await application.process_update(update)
 
 if __name__ == "__main__":
-    main()
+    # Локальный запуск (long polling)
+    if not TELEGRAM_BOT_TOKEN:
+        logger.error("TELEGRAM_BOT_TOKEN не найден! Пожалуйста, установите его в .env")
+    else:
+        logger.info("🤖 Blobis Bot is running (local polling mode)...")
+        setup_bot()
+        application.run_polling(allowed_updates=Update.ALL_TYPES)

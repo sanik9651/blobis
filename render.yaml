@@ -1,17 +1,21 @@
 services:
   - type: web
-    name: blobis-backend
+    name: blobis
     env: python
-    region: frankfurt
-    plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: python start_all.py
+    buildCommand: "pip install -r requirements.txt && npm install --prefix src && npm run build --prefix src"
+    startCommand: "uvicorn backend:app --host 0.0.0.0 --port $PORT"
     envVars:
-      - key: SERVER_HOST
-        value: 0.0.0.0
       - key: TELEGRAM_BOT_TOKEN
         sync: false
-      - key: OPENAI_API_KEY
-        sync: false
+      - key: DATABASE_URL
+        generateValue: true
       - key: WEBAPP_URL
-        sync: false # Установите этот URL после деплоя на Render.com, например, https://your-app-name.onrender.com
+        # Замените на публичный URL вашего сервиса Render.com после первого деплоя.
+        # Пример: https://your-service-name.onrender.com
+        value: "https://blobis-gqla.onrender.com" 
+      - key: WEBHOOK_SECRET
+        generateValue: true # Генерируем секретный токен для вебхуков
+      - key: SERVER_PORT
+        value: "8000" # Или любой другой порт, который вы хотите использовать
+      - key: HF_API_TOKEN
+        sync: false
