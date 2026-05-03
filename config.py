@@ -5,6 +5,7 @@ load_dotenv()
 
 # ============ TELEGRAM ============
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "your_token_here")
+WEBAPP_NAME = os.getenv("WEBAPP_NAME", "blobis")
 
 # ============ DATABASE ============
 DATABASE_URL = os.getenv(
@@ -19,6 +20,7 @@ HF_API_TOKEN = os.getenv("HF_API_TOKEN", "")
 DEBUG = os.getenv("DEBUG", "True") == "True"
 SERVER_HOST = os.getenv("SERVER_HOST", "0.0.0.0")
 SERVER_PORT = int(os.getenv("SERVER_PORT", 8000))
+WEBAPP_URL = os.getenv("WEBAPP_URL", f"http://{SERVER_HOST}:{SERVER_PORT}")
 
 # ============ GAME SETTINGS ============
 DAILY_BONUS = 5

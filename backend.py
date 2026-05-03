@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
+from contextlib import asynccontextmanager
 from sqlalchemy import func
 from datetime import datetime, timedelta
 from pydantic import BaseModel
@@ -9,7 +10,7 @@ import random
 import json
 import uuid
 
-from database import SessionLocal, get_db, init_db
+from database import SessionLocal, get_db, init_db, create_initial_locations, create_npc_fishermen
 from models import (
     User, Location, Fish, Auction, Bid, Quest, 
     NPCFisherman, NPCFish, Tournament, TournamentResult
@@ -56,7 +57,16 @@ class AuctionResponse(BaseModel):
 
 # ============ FASTAPI APP ============
 
-app = FastAPI(title="Blobis API", version="1.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Инициализация БД при старте
+    try:
+        initialize_database()
+    except Exception as e:
+        print(f"❌ Database initialization failed: {e}")
+    yield
+
+app = FastAPI(title="Blobis API", version="1.0.0", lifespan=lifespan)
 
 # CORS middleware
 app.add_middleware(
@@ -74,44 +84,17 @@ def initialize_database():
     """Инициализирует БД при запуске"""
     init_db()
     # Создать начальные локации если их нет
-    db = next(get_db())
-    if db.query(Location).count() == 0:
-        create_initial_locations(db)
-    # Создать NPC рыбаков
-    if db.query(NPCFisherman).count() == 0:
-        create_npc_fishermen(db)
+    db_gen = get_db()
+    db = next(db_gen)
+    try:
+        if db.query(Location).count() == 0:
+            create_initial_locations(db)
+        # Создать NPC рыбаков
+        if db.query(NPCFisherman).count() == 0:
+            create_npc_fishermen(db)
+    finally:
+        db.close()
     print("✅ Database initialized")
-
-# Вызываем инициализацию
-initialize_database()
-
-def create_initial_locations(db: Session):
-    """Создание начальных локаций"""
-    locations = [
-        Location(name="Речной берег", description="Тихое место у реки, идеально для начинающих рыболовов", 
-                 unlock_level=1, base_coin_multiplier=1.0, biome_type="river"),
-        Location(name="Озеро у леса", description="Глубокое озеро в окружении векового леса", 
-                 unlock_level=5, base_coin_multiplier=1.5, biome_type="lake"),
-        Location(name="Горная река", description="Быстрая горная река с чистой водой", 
-                 unlock_level=10, base_coin_multiplier=2.0, biome_type="mountain"),
-        Location(name="Болотные топи", description="Загадочное болото с редкими видами рыб", 
-                 unlock_level=15, base_coin_multiplier=2.5, biome_type="swamp"),
-        Location(name="Океанский берег", description="Могучий океан полон удивительных существ", 
-                 unlock_level=20, base_coin_multiplier=3.0, biome_type="ocean"),
-        Location(name="Подводная пещера", description="Таинственная пещера на глубине", 
-                 unlock_level=30, base_coin_multiplier=5.0, biome_type="cave"),
-    ]
-    db.add_all(locations)
-    db.commit()
-
-def create_npc_fishermen(db: Session):
-    """Создание NPC рыбаков"""
-    npc_names = ["Fisherman_Alex", "Angler_Maria", "ProFisherman_Ivan", 
-                 "SeaHunter_Bob", "DeepSea_Lisa", "RiverKing_Tom"]
-    for name in npc_names:
-        npc = NPCFisherman(name=name)
-        db.add(npc)
-    db.commit()
 
 # AI Fish Generation
 def generate_fish_data(location: Location, db: Session) -> dict:
@@ -753,6 +736,7 @@ async def health_check():
 @app.get("/webapp", response_class=HTMLResponse)
 async def web_app():
     """Telegram Web App интерфейс"""
+    from config import WEBAPP_URL
     html_content = """
 <!DOCTYPE html>
 <html lang="ru">
@@ -934,7 +918,7 @@ async def web_app():
         const tg = window.Telegram.WebApp;
         tg.expand();
         
-        const API_URL = window.location.origin;
+        const API_URL = "__WEBAPP_URL__";
         let userId = null;
         let isFishing = false;
         
@@ -1061,14 +1045,16 @@ async def web_app():
     </script>
 </body>
 </html>
-    """
+    """.replace("__WEBAPP_URL__", WEBAPP_URL)
     return html_content
 
 if __name__ == "__main__":
     import uvicorn
+    import os
+    port = int(os.getenv("PORT", 8000))
     uvicorn.run(
         "backend:app",
         host="0.0.0.0",
-        port=8000,
-        reload=True,
+        port=port,
+        reload=False,
     )

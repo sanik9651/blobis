@@ -22,13 +22,39 @@ Blobis - это увлекательная игра-рыбалка в Telegram �
 
 1. **Backend API** (FastAPI) - REST API для игровой логики
 2. **Telegram Bot** (python-telegram-bot) - Интерфейс для игроков
-3. **Frontend** (React) - Web-интерфейс (опционально)
+3. **Frontend** (React) - Web-интерфейс для Telegram Web App
 
 ## 📋 Требования
 
 - Python 3.12+
 - pip
 - Telegram Bot Token (получите у [@BotFather](https://t.me/BotFather))
+
+## 🚀 Деплой на Render.com (Бесплатно 24/7)
+
+Проект полностью настроен для работы на **Render.com**.
+
+1. **GitHub**: Убедитесь, что ваш код загружен в репозиторий [https://github.com/sanik9651/blobis](https://github.com/sanik9651/blobis).
+2. **Создание Web Service**:
+   - Зайдите в [Render Dashboard](https://dashboard.render.com/).
+   - Нажмите **New +** -> **Web Service**.
+   - Подключите ваш репозиторий `blobis`.
+   - Render автоматически подхватит настройки из файла `render.yaml`.
+3. **Настройка Переменных (Environment Variables)**:
+   В настройках сервиса на Render добавьте:
+   - `TELEGRAM_BOT_TOKEN`: Токен вашего бота от @BotFather.
+   - `WEBAPP_URL`: URL, который выдаст Render (например, `https://blobis-backend.onrender.com`).
+   - `DATABASE_URL`: Можно оставить пустым (будет использован SQLite) или подключить внешнюю PostgreSQL.
+
+## 🛠 Настройка Menu Button в Telegram
+
+Чтобы игра открывалась по нажатию кнопки в меню бота:
+
+1. Напишите [@BotFather](https://t.me/BotFather).
+2. Выберите вашего бота: `/mybots` -> `@YourBotName`.
+3. Перейдите в **Bot Settings** -> **Menu Button** -> **Configure menu button**.
+4. Отправьте ссылку на ваше приложение: `https://your-render-url.onrender.com/webapp`.
+5. Введите название кнопки: `🎮 Играть в Blobis`.
 
 ## 🚀 Быстрый старт
 
@@ -63,18 +89,20 @@ DATABASE_URL=sqlite:///./blobis.db
 ```
 
 ### 3. Запуск
-
-**Backend:**
-```bash
-./venv/bin/python backend.py
-```
-
-Backend будет доступен на `http://localhost:8000`
-
-**Telegram Bot:**
-```bash
-./venv/bin/python telegram_bot.py
-```
+ 
+ Для запуска всех компонентов используйте `start_all.py`:
+ ```bash
+ ./venv/bin/python start_all.py
+ ```
+ 
+ Backend будет доступен на `http://localhost:8000`, Web App на `http://localhost:8000/webapp`.
+ 
+ **Важно:** Для полноценной работы Telegram Web App нужен публичный HTTPS URL. Вы можете использовать `ngrok` для локальной разработки или развернуть проект на хостинге. Подробнее см. `DEPLOYMENT.md`.
+ 
+ После запуска, откройте вашего бота в Telegram и отправьте команду `/start`\\.
+ 
+ **Установка Web App Menu Button:**
+ В @BotFather используйте команду `/setwebapp` для вашего бота, выберите его, затем вставьте URL вашего Web App (например, `https://yourdomain.com/webapp` или ваш ngrok URL). Задайте текст кнопки, например, "Играть в Blobis".
 
 ## 📚 Документация
 
@@ -82,27 +110,25 @@ Backend будет доступен на `http://localhost:8000`
 - [Дизайн-документ игры](GAME_DESIGN_DOCUMENT.md)
 - [API документация](http://localhost:8000/docs) (после запуска backend)
 
-## 🎯 Игровой процесс
-
-1. **Начните игру** - Напишите `/start` боту в Telegram
-2. **Забросьте удочку** - Нажмите кнопку "🎣 Рыбачить"
-3. **Подождите клёва** - Время ожидания зависит от локации и улучшений
-4. **Подсеките рыбу** - Нажмите кнопку вовремя
-5. **Соберите коллекцию** - Ловите редких рыб
-6. **Продавайте на аукционе** - Зарабатывайте монеты
-7. **Улучшайтесь** - Покупайте апгрейды
-8. **Исследуйте локации** - Открывайте новые места для рыбалки
+## 🎯 Игровой процесс (через Telegram Web App)
+ 
+ 1. **Начните игру** - Откройте Web App через кнопку "Играть в Blobis" в меню бота или по команде `/start`.
+ 2. **Рыбачьте** - В Web App нажимайте кнопку "🎣 Рыбачить", ждите поклевку и подсекайте.
+ 3. **Прокачивайтесь** - Повышайте уровень, получайте монеты и открывайте новые локации.
+ 4. **Управляйте инвентарем** - Просматривайте пойманную рыбу.
+ 5. **Торгуйте на аукционе** - Выставляйте редкую рыбу на продажу или покупайте у других игроков.
+ 6. **Выполняйте квесты** - Получайте ежедневные награды.
 
 ## 🗺️ Локации
-
-| Локация | Уровень | Множитель | Биом |
-|---------|---------|-----------|------|
-| Речной берег | 1 | 1.0x | river |
-| Лесное озеро | 5 | 1.5x | lake |
-| Горная река | 10 | 2.0x | mountain |
-| Тёмное болото | 15 | 2.5x | swamp |
-| Открытый океан | 20 | 3.0x | ocean |
-| Подземная пещера | 30 | 5.0x | cave |
+ 
+ | Локация | Уровень | Множитель | Биом |
+ |---------|---------|-----------|------|
+ | Речной берег | 1 | 1.0x | river |
+ | Озеро у леса | 5 | 1.5x | lake |
+ | Горная река | 10 | 2.0x | mountain |
+ | Болотные топи | 15 | 2.5x | swamp |
+ | Океанский берег | 20 | 3.0x | ocean |
+ | Подводная пещера | 30 | 5.0x | cave |
 
 ## 🐟 Редкость рыб
 
@@ -135,21 +161,24 @@ Backend будет доступен на `http://localhost:8000`
 
 Полная документация доступна на `/docs` после запуска backend.
 
-## 🧪 Тестирование
-
-```bash
-# Проверка здоровья API
-curl http://localhost:8000/api/health
-
-# Создание пользователя
-curl http://localhost:8000/api/user/123456789
-
-# Начать рыбалку
-curl -X POST http://localhost:8000/api/fish/123456789/cast
-
-# Поймать рыбу
-curl -X POST http://localhost:8000/api/fish/123456789/hook
-```
+## 🧪 Тестирование (через API)
+ 
+ ```bash
+ # Проверка здоровья API
+ curl http://localhost:8000/api/health
+ 
+ # Получить или создать пользователя
+ curl http://localhost:8000/api/user/123456789
+ 
+ # Начать рыбалку (для пользователя 123456789)
+ curl -X POST http://localhost:8000/api/fish/123456789/cast
+ 
+ # Поймать рыбу (для пользователя 123456789)
+ curl -X POST http://localhost:8000/api/fish/123456789/hook
+ ```
+ 
+ **Тестирование Web App:**
+ Откройте `http://localhost:8000/webapp` в браузере. Для полной функциональности используйте Web App внутри Telegram.
 
 ## 🤝 Вклад в проект
 
@@ -174,9 +203,9 @@ curl -X POST http://localhost:8000/api/fish/123456789/hook
 Если вы нашли баг или у вас есть предложение, создайте [issue](https://github.com/yourusername/blobis/issues).
 
 ## 📞 Контакты
-
-- Telegram: [@your_bot](https://t.me/your_bot)
-- Email: support@blobis.game
+ 
+ - Telegram: [@Blobis_game_bot](https://t.me/Blobis_game_bot)
+ - Email: support@blobis.game
 
 ---
 

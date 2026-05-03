@@ -4,6 +4,7 @@ AI утилиты для генерации рыб
 import random
 import requests
 import os
+import asyncio # Добавляем asyncio для асинхронных операций
 from config import HF_API_TOKEN
 
 class FishImageGenerator:
@@ -54,16 +55,19 @@ class FishImageGenerator:
             headers = {"Authorization": f"Bearer {HF_API_TOKEN}"}
             api_url = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1"
             
-            payload = {
-                "inputs": prompt,
-                "parameters": {
-                    "negative_prompt": "blurry, low quality, distorted, ugly",
-                    "num_inference_steps": 30,
-                    "guidance_scale": 7.5
-                }
-            }
-            
-            response = requests.post(api_url, headers=headers, json=payload, timeout=60)
+            # Асинхронный запрос
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: requests.post(api_url, headers=headers, json={
+                    "inputs": prompt,
+                    "parameters": {
+                        "negative_prompt": "blurry, low quality, distorted, ugly",
+                        "num_inference_steps": 30,
+                        "guidance_scale": 7.5
+                    }
+                }, timeout=60)
+            )
             
             if response.status_code == 200:
                 # Сохраняем изображение
@@ -81,7 +85,7 @@ class FishImageGenerator:
                 return f"https://via.placeholder.com/400x300?text={fish_name.replace(' ', '+')}"
             
             else:
-                print(f"⚠️ Ошибка генерации: {response.status_code}")
+                print(f"⚠️ Ошибка генерации: {response.status_code}. Ответ: {response.text}")
                 return f"https://via.placeholder.com/400x300?text={fish_name.replace(' ', '+')}"
         
         except Exception as e:
@@ -143,7 +147,7 @@ def format_fish_display(fish: dict) -> str:
     text = f"""
 🐟 **{fish['name']}**
 ━━━━━━━━━━━━━━━━━━━━━
-
+ 
 {emoji} Редкость: {fish['rarity'].upper()}
 💰 Ценность: {fish['coin_value']} монет
 ⚖️ Вес: {fish['weight']} кг
