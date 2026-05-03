@@ -12,7 +12,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-API_BASE_URL = f"http://{SERVER_HOST}:{SERVER_PORT}"
+API_BASE_URL = WEBAPP_URL # Используем WEBAPP_URL для доступа к бэкенду, который будет публичным URL на Render.com
 
 # ============ COMMAND HANDLERS ============
 
