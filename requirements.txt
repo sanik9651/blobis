@@ -1,0 +1,12 @@
+python-telegram-bot
+fastapi
+uvicorn
+sqlalchemy
+python-dotenv
+aiohttp
+requests
+Pillow
+python-multipart
+pydantic
+pydantic-settings
+httpx
