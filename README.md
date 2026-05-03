@@ -22,7 +22,7 @@ Blobis - это увлекательная игра-рыбалка в Telegram �
 
 1. **Backend API** (FastAPI) - REST API для игровой логики
 2. **Telegram Bot** (python-telegram-bot) - Интерфейс для игроков
-3. **Frontend** (React) - Web-интерфейс для Telegram Web App
+3. **Frontend** (HTML/JavaScript) - Web-интерфейс для Telegram Web App (встроен в Backend)
 
 ## 📋 Требования
 
@@ -97,18 +97,15 @@ DATABASE_URL=sqlite:///./blobis.db
  
  Backend будет доступен на `http://localhost:8000`, Web App на `http://localhost:8000/webapp`.
  
- **Важно:** Для полноценной работы Telegram Web App нужен публичный HTTPS URL. Вы можете использовать `ngrok` для локальной разработки или развернуть проект на хостинге. Подробнее см. `DEPLOYMENT.md`.
- 
  После запуска, откройте вашего бота в Telegram и отправьте команду `/start`\\.
  
- **Установка Web App Menu Button:**
- В @BotFather используйте команду `/setwebapp` для вашего бота, выберите его, затем вставьте URL вашего Web App (например, `https://yourdomain.com/webapp` или ваш ngrok URL). Задайте текст кнопки, например, "Играть в Blobis".
-
-## 📚 Документация
-
-- [Руководство по развертыванию](DEPLOYMENT.md)
-- [Дизайн-документ игры](GAME_DESIGN_DOCUMENT.md)
-- [API документация](http://localhost:8000/docs) (после запуска backend)
+ **Настройка Web App Menu Button:**
+ В @BotFather используйте команду `/setwebapp` для вашего бота, выберите его, затем вставьте URL вашего Web App (который выдаст Render, например, `https://your-app-name.onrender.com/webapp`). Задайте текст кнопки, например, "🎮 Играть в Blobis".
+ 
+ ## 📚 Документация
+ 
+ - [Дизайн-документ игры](GAME_DESIGN_DOCUMENT.md)
+ - [API документация](http://localhost:8000/docs) (после запуска backend)
 
 ## 🎯 Игровой процесс (через Telegram Web App)
  

@@ -13,3 +13,5 @@ services:
         sync: false
       - key: OPENAI_API_KEY
         sync: false
+      - key: WEBAPP_URL
+        sync: false # Установите этот URL после деплоя на Render.com, например, https://your-app-name.onrender.com
