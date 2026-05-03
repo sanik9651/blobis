@@ -198,12 +198,15 @@ def generate_fish_data(location: Location, db: Session) -> dict:
     }
 
 def check_level_up(user: User):
-    """Проверка повышения уровня"""
-    xp_needed = user.level * 100
-    if user.experience >= xp_needed:
-        user.level += 1
-        user.experience = user.experience - xp_needed
-        user.coins += 50  # Бонус за уровень
+    """Проверка повышения уровня (поддержка нескольких уровней за раз)"""
+    while True:
+        xp_needed = user.level * 100
+        if user.experience >= xp_needed:
+            user.level += 1
+            user.experience -= xp_needed
+            user.coins += 50  # Бонус за уровень
+        else:
+            break
 
 def get_or_create_user(telegram_id: str, db: Session) -> User:
     """Получить или создать пользователя"""
