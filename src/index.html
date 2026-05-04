@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blobis - Рыбалка</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .stat-label {
+            font-weight: 600;
+        }
+
+        .stat-value {
+            color: #ffd700;
+        }
+
+        .fishing-area {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .fish-button {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 20px 40px;
+            font-size: 1.3em;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .fish-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .fish-button:active {
+            transform: translateY(0);
+        }
+
+        .fish-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fish-info {
+            margin-top: 10px;
+        }
+
+        .fish-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .fish-rarity {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(255, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .inventory-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            color: white;
+            font-size: 1.1em;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .inventory-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎣 Blobis</h1>
+            <p>Рыбалка с AI-генерацией</p>
+        </div>
+
+        <div class="stats" id="stats">
+            <div class="stat-row">
+                <span class="stat-label">💰 Монеты:</span>
+                <span class="stat-value" id="coins">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">⭐ Уровень:</span>
+                <span class="stat-value" id="level">1</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">🐟 Поймано рыб:</span>
+                <span class="stat-value" id="totalFish">0</span>
+            </div>
+        </div>
+
+        <div class="fishing-area">
+            <button class="fish-button" id="fishButton" onclick="goFishing()">
+                🎣 Рыбачить
+            </button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 10px;">Ловим рыбу...</p>
+            </div>
+
+            <div class="result" id="result">
+                <div class="fish-info">
+                    <div class="fish-name" id="fishName"></div>
+                    <div class="fish-rarity" id="fishRarity"></div>
+                    <div>💎 Ценность: <span id="fishValue"></span> монет</div>
+                    <div>⚖️ Вес: <span id="fishWeight"></span> кг</div>
+                    <div>📏 Размер: <span id="fishSize"></span> см</div>
+                </div>
+            </div>
+
+            <div class="error" id="error"></div>
+        </div>
+
+        <button class="inventory-button" onclick="showInventory()">
+            📦 Инвентарь
+        </button>
+
+        <button class="inventory-button" onclick="showLeaderboard()">
+            🏆 Лидерборд
+        </button>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const API_URL = window.location.origin;
+        let userId = null;
+        let userData = null;
+
+        // Получаем ID пользователя из Telegram
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            userId = tg.initDataUnsafe.user.id;
+            loadUserData();
+        } else {
+            // Для тестирования без Telegram
+            userId = 123456789;
+            loadUserData();
+        }
+
+        async function loadUserData() {
+            try {
+                // Регистрируем или обновляем пользователя
+                const username = tg.initDataUnsafe?.user?.username || `user_${userId}`;
+                const registerResponse = await fetch(`${API_URL}/api/user/${userId}/update`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: username })
+                });
+
+                if (!registerResponse.ok) {
+                    throw new Error('Failed to register user');
+                }
+
+                // Загружаем данные пользователя
+                const response = await fetch(`${API_URL}/api/user/${userId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load user data');
+                }
+
+                userData = await response.json();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showError('Ошибка загрузки данных пользователя');
+            }
+        }
+
+        function updateStats() {
+            if (!userData) return;
+
+            document.getElementById('coins').textContent = Math.floor(userData.coins);
+            document.getElementById('level').textContent = userData.level;
+            document.getElementById('totalFish').textContent = userData.total_fish_caught;
+        }
+
+        async function goFishing() {
+            const button = document.getElementById('fishButton');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const error = document.getElementById('error');
+
+            button.disabled = true;
+            loading.classList.add('show');
+            result.classList.remove('show');
+            error.classList.remove('show');
+
+            try {
+                const response = await fetch(`${API_URL}/api/user/${userId}/fish`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fish');
+                }
+
+                const fish = await response.json();
+                displayFish(fish);
+
+                // Обновляем данные пользователя
+                await loadUserData();
+            } catch (error) {
+                console.error('Error fishing:', error);
+                showError('Ошибка при ловле рыбы. Попробуйте снова.');
+            } finally {
+                loading.classList.remove('show');
+                button.disabled = false;
+            }
+        }
+
+        function displayFish(fish) {
+            const result = document.getElementById('result');
+            const rarityColors = {
+                'common': '#808080',
+                'rare': '#0000FF',
+                'epic': '#FFA500',
+                'legendary': '#FFD700',
+                'mythical': '#800080'
+            };
+
+            const rarityNames = {
+                'common': 'Обычная',
+                'rare': 'Редкая',
+                'epic': 'Эпическая',
+                'legendary': 'Легендарная',
+                'mythical': 'Мифическая'
+            };
+
+            document.getElementById('fishName').textContent = fish.name;
+            document.getElementById('fishValue').textContent = fish.coin_value;
+            document.getElementById('fishWeight').textContent = fish.weight?.toFixed(2) || '?';
+            document.getElementById('fishSize').textContent = fish.size?.toFixed(2) || '?';
+
+            const rarityElement = document.getElementById('fishRarity');
+            rarityElement.textContent = rarityNames[fish.rarity] || fish.rarity;
+            rarityElement.style.backgroundColor = rarityColors[fish.rarity] || '#808080';
+
+            result.classList.add('show');
+        }
+
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.classList.add('show');
+        }
+
+        function showInventory() {
+            tg.showAlert('Инвентарь в разработке');
+        }
+
+        function showLeaderboard() {
+            tg.showAlert('Лидерборд в разработке');
+        }
+    </script>
+</body>
+</html>

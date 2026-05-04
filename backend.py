@@ -7,7 +7,10 @@ from sqlalchemy.orm import Session
 import uvicorn
 import asyncio
 import os
-from contextlib import asynccontextmanager
+import sys
+
+# Добавляем текущую директорию в sys.path для корректного импорта локальных модулей на Render.com
+sys.path.append(os.path.dirname(__file__))
 
 import crud, models, schemas
 from database import SessionLocal, engine
@@ -201,20 +204,19 @@ def end_tournament_route(tournament_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Could not end tournament")
     return tournament
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Настройка бота при запуске приложения
+@app.on_event("startup")
+async def startup_event():
+    """Настройка бота при запуске приложения"""
     telegram_bot.setup_bot()
     if TELEGRAM_BOT_TOKEN:
         await telegram_bot.start_webhook_bot()
     else:
         logger.error("TELEGRAM_BOT_TOKEN не найден. Бот не будет запущен.")
-    yield
-    # Очистка ресурсов при остановке
-    logger.info("Приложение завершает работу.")
 
-# Применяем lifespan к приложению
-app.router.lifespan_context = lifespan
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Очистка ресурсов при остановке"""
+    logger.info("Приложение завершает работу.")
 
 # Если запускаем локально, то используем uvicorn
 if __name__ == "__main__":

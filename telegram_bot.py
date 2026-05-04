@@ -20,17 +20,7 @@ application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда /start - Приветствие и кнопка Web App"""
     user = update.effective_user
-    
-    # Регистрируем пользователя через API (чтобы он был в базе до открытия WebApp)
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(f"{API_BASE_URL}/api/user/{user.id}/update", 
-                                   json={"username": user.username}) as resp:
-                if resp.status != 200:
-                    logger.warning(f"Failed to register user {user.id}: {await resp.text()}")
-    except Exception as e:
-        logger.error(f"Error registering user {user.id}: {e}")
-    
+
     welcome_text = (
         f"🎣 *Добро пожаловать в BLOBIS\\!* 🐟\n\n"
         f"Привет, {user.first_name}\\!\n\n"
@@ -38,12 +28,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "⚠️ *Весь игровой процесс перенесен в Web App\\.*\n"
         "Нажми на кнопку ниже, чтобы начать рыбачить, торговать на аукционе и выполнять квесты\\!"
     )
-    
+
     keyboard = [
         [InlineKeyboardButton("🎮 Играть в Blobis", web_app=WebAppInfo(url=f"{WEBAPP_URL}/webapp"))]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    
+
     await update.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode='MarkdownV2')
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
