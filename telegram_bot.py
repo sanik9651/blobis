@@ -57,13 +57,14 @@ async def start_webhook_bot():
     """Запуск бота в режиме вебхуков."""
     if not TELEGRAM_BOT_TOKEN:
         logger.error("TELEGRAM_BOT_TOKEN не найден!")
-        return
+        raise ValueError("TELEGRAM_BOT_TOKEN is required")
 
     # Проверяем, что WEBHOOK_URL это HTTPS
     if not WEBHOOK_URL or not WEBHOOK_URL.startswith("https://"):
         logger.error(f"WEBHOOK_URL должен быть HTTPS! Текущее значение: {WEBHOOK_URL}")
-        logger.error("Установите переменную окружения WEBAPP_URL с https:// адресом")
-        return
+        logger.error("Установите переменную окружения WEBHOOK_URL с https:// адресом")
+        logger.error("Например: WEBHOOK_URL=https://blobis-gqla.onrender.com/webhook")
+        raise ValueError("WEBHOOK_URL must be HTTPS")
 
     logger.info(f"Setting webhook for bot to {WEBHOOK_URL}")
     try:
@@ -71,6 +72,7 @@ async def start_webhook_bot():
         logger.info("🤖 Blobis Bot is configured for webhooks.")
     except Exception as e:
         logger.error(f"Failed to set webhook: {e}")
+        raise
 
 async def process_update(request_body: dict):
     """Обработка входящих обновлений от Telegram."""

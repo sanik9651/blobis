@@ -209,7 +209,11 @@ async def startup_event():
     """Настройка бота при запуске приложения"""
     telegram_bot.setup_bot()
     if TELEGRAM_BOT_TOKEN:
-        await telegram_bot.start_webhook_bot()
+        try:
+            await telegram_bot.start_webhook_bot()
+        except Exception as e:
+            logger.error(f"Failed to start webhook bot: {e}")
+            logger.warning("Bot will continue without webhook. You can set it up manually later.")
     else:
         logger.error("TELEGRAM_BOT_TOKEN не найден. Бот не будет запущен.")
 
