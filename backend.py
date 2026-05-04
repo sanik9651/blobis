@@ -224,4 +224,6 @@ async def shutdown_event():
 
 # Если запускаем локально, то используем uvicorn
 if __name__ == "__main__":
-    uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT)
+    import os
+    port = int(os.getenv("PORT", SERVER_PORT))
+    uvicorn.run(app, host=SERVER_HOST, port=port)
