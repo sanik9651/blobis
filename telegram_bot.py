@@ -66,6 +66,9 @@ async def start_webhook_bot():
         logger.error("Например: WEBHOOK_URL=https://blobis-gqla.onrender.com/webhook")
         raise ValueError("WEBHOOK_URL must be HTTPS")
 
+    # Инициализируем application
+    await application.initialize()
+
     logger.info(f"Setting webhook for bot to {WEBHOOK_URL}")
     try:
         await application.bot.set_webhook(url=WEBHOOK_URL, secret_token=WEBHOOK_SECRET)
@@ -76,8 +79,14 @@ async def start_webhook_bot():
 
 async def process_update(request_body: dict):
     """Обработка входящих обновлений от Telegram."""
-    update = Update.de_json(request_body, application.bot)
-    await application.process_update(update)
+    try:
+        logger.info(f"Processing Telegram update: {request_body.get('update_id', 'unknown')}")
+        update = Update.de_json(request_body, application.bot)
+        await application.initialize()  # Убедимся, что application инициализирован
+        await application.process_update(update)
+        logger.info(f"Update {request_body.get('update_id', 'unknown')} processed successfully")
+    except Exception as e:
+        logger.error(f"Error processing update: {e}", exc_info=True)
 
 if __name__ == "__main__":
     # Локальный запуск (long polling)

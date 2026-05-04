@@ -51,7 +51,13 @@ app = FastAPI(
 # Монтируем статические файлы для Web App
 # Убедитесь, что папка `src` существует и содержит `index.html` и другие статические ресурсы.
 # На Render.com путь должен быть корректным относительно корня проекта.
-app.mount("/webapp", StaticFiles(directory="src"), name="webapp")
+import os
+static_dir = os.path.join(os.path.dirname(__file__), "src")
+if os.path.exists(static_dir):
+    app.mount("/webapp", StaticFiles(directory=static_dir, html=True), name="webapp")
+    logger.info(f"Static files mounted from {static_dir}")
+else:
+    logger.error(f"Static directory not found: {static_dir}")
 
 # Dependency
 def get_db():
@@ -79,10 +85,15 @@ async def read_root():
 @app.post(WEBHOOK_PATH)
 async def bot_webhook(request: Request, background_tasks: BackgroundTasks):
     """Обработка обновлений от Telegram."""
+    logger.info(f"Received webhook request from {request.client.host}")
+
     if WEBHOOK_SECRET is None or request.headers.get("X-Telegram-Bot-Api-Secret-Token") == WEBHOOK_SECRET:
         update_json = await request.json()
+        logger.info(f"Processing update: {update_json.get('update_id', 'unknown')}")
         background_tasks.add_task(telegram_bot.process_update, update_json)
         return {"status": "ok"}
+
+    logger.warning(f"Invalid webhook secret from {request.client.host}")
     raise HTTPException(status_code=403, detail="Invalid webhook secret")
 
 @app.post("/api/user/{user_id}/update", response_model=schemas.User)
