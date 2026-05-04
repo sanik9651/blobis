@@ -218,6 +218,20 @@ def end_tournament_route(tournament_id: int, db: Session = Depends(get_db)):
 @app.on_event("startup")
 async def startup_event():
     """Настройка бота при запуске приложения"""
+    # Инициализируем базу данных
+    from database import init_db, create_initial_locations, create_npc_fishermen
+    db = SessionLocal()
+    try:
+        init_db()
+        create_initial_locations(db)
+        create_npc_fishermen(db)
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+    finally:
+        db.close()
+
+    # Настраиваем бота
     telegram_bot.setup_bot()
     if TELEGRAM_BOT_TOKEN:
         try:

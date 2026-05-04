@@ -1,5 +1,6 @@
 import random
 import uuid
+import logging
 from datetime import datetime, timedelta
 from typing import Optional, List
 from sqlalchemy.orm import Session
@@ -12,6 +13,8 @@ from config import (
     REFERRAL_BONUS, REFERRAL_PERCENTAGE, TOURNAMENT_DURATION_HOURS,
     TOURNAMENT_FIRST_PLACE_REWARD, TOURNAMENT_PARTICIPANT_REWARD
 )
+
+logger = logging.getLogger(__name__)
 
 # ============ USER CRUD ============
 def get_user(db: Session, user_id: int):
@@ -88,8 +91,19 @@ def generate_random_fish(db: Session, user_id: int, location_id: int = 1):
     """Generate a random fish based on rarity probabilities"""
     location = db.query(models.Location).filter(models.Location.id == location_id).first()
     if not location:
-        location_id = 1
-        location = db.query(models.Location).filter(models.Location.id == location_id).first()
+        # Если локация не найдена, создаём дефолтную
+        logger.warning(f"Location {location_id} not found, using default")
+        location = models.Location(
+            id=1,
+            name="Речной берег",
+            description="Тихое место у реки",
+            unlock_level=1,
+            base_coin_multiplier=1.0,
+            biome_type="river"
+        )
+        db.add(location)
+        db.commit()
+        db.refresh(location)
 
     # Select rarity
     rand = random.random()
