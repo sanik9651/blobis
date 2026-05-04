@@ -92,7 +92,22 @@ class FishImageGenerator:
             print(f"❌ Ошибка при генерации изображения: {e}")
             return f"https://via.placeholder.com/400x300?text={fish_name.replace(' ', '+')}"
 
-def generate_fish_description(fish_name: str, biome: str, rarity: str, weight: float, size: float) -> str:
+async def generate_fish_image(fish_id: str, fish_name: str, db):
+    """Обёртка для генерации изображения рыбы"""
+    # Заглушка - в будущем можно добавить реальную генерацию
+    pass
+
+async def generate_fish_description(fish_id: str, fish_name: str, db):
+    """Обёртка для генерации описания рыбы"""
+    # Заглушка - в будущем можно добавить реальную генерацию
+    pass
+
+async def get_ai_response(user_id: int, message: str, db) -> str:
+    """Получить ответ от AI"""
+    # Заглушка для AI чата
+    return "AI чат пока не реализован. Скоро будет доступен!"
+
+def generate_fish_description_text(fish_name: str, biome: str, rarity: str, weight: float, size: float) -> str:
     """Генерирует описание рыбы"""
     
     biome_descriptions = {
