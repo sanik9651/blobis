@@ -12,7 +12,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-API_BASE_URL = WEBAPP_URL # Используем WEBAPP_URL для доступа к бэкенду, который будет публичным URL на Render.com
+# Для Web App кнопки нужен HTTPS URL
+# Если WEBAPP_URL не HTTPS, используем явный URL
+if WEBAPP_URL and WEBAPP_URL.startswith("https://"):
+    WEB_APP_URL = WEBAPP_URL
+else:
+    # Fallback для продакшена
+    WEB_APP_URL = os.getenv("WEBAPP_URL", "https://blobis-gqla.onrender.com")
+    logger.warning(f"WEBAPP_URL is not HTTPS ({WEBAPP_URL}), using fallback: {WEB_APP_URL}")
+
+API_BASE_URL = WEB_APP_URL  # Используем для доступа к бэкенду
 
 # Инициализация приложения Telegram Bot
 application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
@@ -30,7 +39,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     keyboard = [
-        [InlineKeyboardButton("🎮 Играть в Blobis", web_app=WebAppInfo(url=f"{WEBAPP_URL}/webapp"))]
+        [InlineKeyboardButton("🎮 Играть в Blobis", web_app=WebAppInfo(url=f"{WEB_APP_URL}/webapp/"))]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
