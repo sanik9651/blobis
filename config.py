@@ -20,9 +20,20 @@ HF_API_TOKEN = os.getenv("HF_API_TOKEN", "")
 DEBUG = os.getenv("DEBUG", "True") == "True"
 SERVER_HOST = os.getenv("SERVER_HOST", "0.0.0.0")
 SERVER_PORT = int(os.getenv("SERVER_PORT", 8000))
-WEBAPP_URL = os.getenv("WEBAPP_URL", f"http://{SERVER_HOST}:{SERVER_PORT}")
+
+# WEBAPP_URL должен быть HTTPS на продакшене
+WEBAPP_URL = os.getenv("WEBAPP_URL")
+if not WEBAPP_URL:
+    # Локальная разработка
+    WEBAPP_URL = f"http://{SERVER_HOST}:{SERVER_PORT}"
+
 WEBHOOK_PATH = os.getenv("WEBHOOK_PATH", "/webhook")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL", f"{WEBAPP_URL}{WEBHOOK_PATH}")
+
+# WEBHOOK_URL должен быть явно HTTPS для Telegram
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+if not WEBHOOK_URL:
+    WEBHOOK_URL = f"{WEBAPP_URL}{WEBHOOK_PATH}"
+
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET", None)
 
 # ============ GAME SETTINGS ============

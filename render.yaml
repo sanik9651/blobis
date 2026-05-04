@@ -11,6 +11,8 @@ services:
         value: "sqlite:///./blobis.db"
       - key: WEBAPP_URL
         value: "https://blobis-gqla.onrender.com"
+      - key: WEBHOOK_URL
+        value: "https://blobis-gqla.onrender.com/webhook"
       - key: WEBHOOK_SECRET
         generateValue: true
       - key: SERVER_PORT
