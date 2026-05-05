@@ -91,7 +91,6 @@ async def process_update(request_body: dict):
     try:
         logger.info(f"Processing Telegram update: {request_body.get('update_id', 'unknown')}")
         update = Update.de_json(request_body, application.bot)
-        await application.initialize()  # Убедимся, что application инициализирован
         await application.process_update(update)
         logger.info(f"Update {request_body.get('update_id', 'unknown')} processed successfully")
     except Exception as e:
