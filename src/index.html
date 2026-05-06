@@ -554,22 +554,53 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(180deg, #001a2e 0%, #000a14 100%);
+            background: linear-gradient(180deg, #4da6d4 0%, #1e5a7a 30%, #0d3a52 60%, #051e2e 100%);
             z-index: 1000;
             display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             padding: 20px;
+            overflow: hidden;
         }
 
         .fishing-game-overlay.active {
+            display: block;
+        }
+
+        .fishing-game-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 120px;
+            background: repeating-linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.03) 0px,
+                rgba(255, 255, 255, 0.08) 40px,
+                rgba(255, 255, 255, 0.03) 80px
+            );
+            animation: waves 8s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes waves {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(80px); }
+        }
+
+        .game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .game-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
+            z-index: 2;
         }
 
         .game-fish-name {
@@ -577,114 +608,154 @@
             font-weight: 700;
             color: #ffffff;
             margin-bottom: 8px;
-            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 255, 255, 0.3);
             letter-spacing: -0.5px;
         }
 
         .game-instruction {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.85em;
-            font-weight: 500;
-        }
-
-        .progress-container {
-            width: 100%;
-            max-width: 400px;
-            margin-bottom: 32px;
-        }
-
-        .progress-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            color: #ffffff;
-            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
             font-size: 0.9em;
+            font-weight: 500;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
         }
 
-        .progress-bar {
-            width: 100%;
-            height: 28px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 14px;
+        .depth-scale {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 80px;
+            height: 70%;
+            max-height: 500px;
+            background: linear-gradient(180deg,
+                rgba(135, 206, 250, 0.3) 0%,
+                rgba(70, 130, 180, 0.4) 30%,
+                rgba(25, 70, 120, 0.5) 60%,
+                rgba(10, 30, 60, 0.6) 100%
+            );
+            border-radius: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: inset 0 4px 20px rgba(0, 0, 0, 0.4), 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
             overflow: hidden;
-            border: 2px solid rgba(255, 255, 255, 0.15);
-            position: relative;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #FFD700, #FFA500);
-            transition: width 0.1s linear;
-            position: relative;
-            box-shadow: 0 0 16px rgba(255, 215, 0, 0.5);
-        }
-
-        .progress-fill::after {
+        .depth-scale::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            animation: shimmer 1.5s infinite;
+            height: 40px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent);
+            pointer-events: none;
         }
 
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+        .depth-markers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .depth-marker {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .depth-marker span {
+            font-size: 0.7em;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 600;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        .fish-indicator {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+            transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+            animation: fishSwim 2s ease-in-out infinite;
+        }
+
+        @keyframes fishSwim {
+            0%, 100% { transform: translateX(-50%) rotate(-5deg); }
+            50% { transform: translateX(-50%) rotate(5deg); }
+        }
+
+        .game-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+            max-width: 400px;
+            width: 100%;
         }
 
         .tension-container {
             width: 100%;
-            max-width: 400px;
-            margin-bottom: 50px;
+            margin-bottom: 40px;
         }
 
         .tension-label {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             color: #ffffff;
             font-weight: 600;
-            font-size: 0.9em;
+            font-size: 0.95em;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
         }
 
         .tension-status {
             font-weight: 700;
-            font-size: 1em;
+            font-size: 1.05em;
             letter-spacing: 0.5px;
         }
 
         .tension-status.weak {
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.6);
         }
 
         .tension-status.good {
             color: #10b981;
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .tension-status.warning {
+            color: #fbbf24;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
         }
 
         .tension-status.critical {
             color: #ef4444;
             animation: pulse 0.4s ease-in-out infinite;
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
         }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.05); }
+            50% { opacity: 0.8; transform: scale(1.08); }
         }
 
         .tension-bar {
             width: 100%;
-            height: 36px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 18px;
+            height: 44px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 22px;
             overflow: hidden;
-            border: 2px solid rgba(255, 255, 255, 0.15);
+            border: 3px solid rgba(255, 255, 255, 0.25);
             position: relative;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3);
         }
 
         .tension-zones {
@@ -697,56 +768,87 @@
         }
 
         .zone-weak {
-            width: 60%;
-            background: rgba(156, 163, 175, 0.15);
+            width: 50%;
+            background: linear-gradient(90deg, rgba(100, 116, 139, 0.25), rgba(100, 116, 139, 0.15));
+            border-right: 2px solid rgba(255, 255, 255, 0.15);
         }
 
         .zone-good {
             width: 25%;
-            background: rgba(16, 185, 129, 0.2);
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.35), rgba(16, 185, 129, 0.25));
+            border-right: 2px solid rgba(255, 255, 255, 0.15);
+            box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .zone-warning {
+            width: 15%;
+            background: linear-gradient(90deg, rgba(251, 191, 36, 0.3), rgba(251, 191, 36, 0.2));
+            border-right: 2px solid rgba(255, 255, 255, 0.15);
         }
 
         .zone-critical {
-            width: 15%;
-            background: rgba(239, 68, 68, 0.2);
+            width: 10%;
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.35), rgba(239, 68, 68, 0.25));
         }
 
         .tension-fill {
             height: 100%;
-            transition: width 0.05s linear, background 0.2s;
+            transition: width 0.08s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s;
             position: relative;
             z-index: 1;
         }
 
+        .tension-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
         .tension-fill.weak {
-            background: linear-gradient(90deg, #6b7280, #9ca3af);
+            background: linear-gradient(90deg, #64748b, #94a3b8);
         }
 
         .tension-fill.good {
-            background: linear-gradient(90deg, #059669, #10b981);
-            box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
+            background: linear-gradient(90deg, #059669, #10b981, #34d399);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6), inset 0 2px 8px rgba(255, 255, 255, 0.3);
+        }
+
+        .tension-fill.warning {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.5);
         }
 
         .tension-fill.critical {
-            background: linear-gradient(90deg, #dc2626, #ef4444);
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+            background: linear-gradient(90deg, #dc2626, #ef4444, #f87171);
+            box-shadow: 0 0 24px rgba(239, 68, 68, 0.7), inset 0 2px 8px rgba(255, 255, 255, 0.2);
         }
 
         .tension-markers {
             display: flex;
             justify-content: space-between;
-            margin-top: 6px;
-            font-size: 0.7em;
-            color: rgba(255, 255, 255, 0.4);
+            margin-top: 8px;
+            font-size: 0.75em;
+            color: rgba(255, 255, 255, 0.5);
             font-weight: 600;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
         }
 
         .reel-button {
-            width: 220px;
-            height: 220px;
+            width: 200px;
+            height: 200px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #ffffff, #e5e7eb);
-            border: 4px solid rgba(255, 255, 255, 0.6);
+            background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 50%, #e0e0e0 100%);
+            border: 5px solid rgba(255, 255, 255, 0.8);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -754,15 +856,36 @@
             font-size: 3.5em;
             cursor: pointer;
             transition: all 0.1s ease;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 0 12px rgba(255, 255, 255, 0.05);
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                0 0 0 10px rgba(255, 255, 255, 0.1),
+                inset 0 4px 12px rgba(255, 255, 255, 0.5),
+                inset 0 -4px 12px rgba(0, 0, 0, 0.1);
             user-select: none;
             -webkit-user-select: none;
             touch-action: none;
+            position: relative;
+        }
+
+        .reel-button::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            right: 10%;
+            height: 30%;
+            background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.6), transparent);
+            border-radius: 50%;
+            pointer-events: none;
         }
 
         .reel-button:active {
-            transform: scale(0.94);
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 0 0 12px rgba(255, 255, 255, 0.05);
+            transform: scale(0.92);
+            box-shadow:
+                0 4px 20px rgba(0, 0, 0, 0.5),
+                0 0 0 10px rgba(255, 255, 255, 0.1),
+                inset 0 4px 12px rgba(255, 255, 255, 0.3),
+                inset 0 -4px 12px rgba(0, 0, 0, 0.2);
         }
 
         .reel-button.disabled {
@@ -771,11 +894,12 @@
         }
 
         .reel-text {
-            font-size: 0.28em;
+            font-size: 0.26em;
             font-weight: 700;
             color: #1f2937;
-            margin-top: 6px;
-            letter-spacing: 1px;
+            margin-top: 8px;
+            letter-spacing: 1.5px;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
         }
 
         .game-result {
@@ -987,46 +1111,47 @@
 
     <!-- Fishing Mini-Game Overlay -->
     <div class="fishing-game-overlay" id="fishingGame">
-        <div class="game-header">
-            <div class="game-fish-name" id="gameFishName">Рыба клюнула!</div>
-            <div class="game-instruction" id="gameInstruction">Удерживай натяжение в зеленой зоне!</div>
-        </div>
+        <div class="game-container">
+            <div class="game-header">
+                <div class="game-fish-name" id="gameFishName">??? Неизвестная рыба</div>
+                <div class="game-instruction" id="gameInstruction">Держи натяжение в зелёной зоне!</div>
+            </div>
 
-        <div class="progress-container">
-            <div class="progress-label">
-                <span>Прогресс вылова</span>
-                <span id="catchProgressText">0%</span>
+            <div class="depth-scale">
+                <div class="depth-markers" id="depthMarkers"></div>
+                <div class="fish-indicator" id="fishIndicator">🐟</div>
             </div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="catchProgressBar" style="width: 0%"></div>
-            </div>
-        </div>
 
-        <div class="tension-container">
-            <div class="tension-label">
-                <span>Натяжение лески</span>
-                <span class="tension-status" id="tensionStatus">СЛАБО</span>
-            </div>
-            <div class="tension-bar">
-                <div class="tension-zones">
-                    <div class="zone-weak"></div>
-                    <div class="zone-good"></div>
-                    <div class="zone-critical"></div>
+            <div class="game-center">
+                <div class="tension-container">
+                    <div class="tension-label">
+                        <span>Натяжение лески</span>
+                        <span class="tension-status weak" id="tensionStatus">СЛАБО</span>
+                    </div>
+                    <div class="tension-bar">
+                        <div class="tension-zones">
+                            <div class="zone-weak"></div>
+                            <div class="zone-good"></div>
+                            <div class="zone-warning"></div>
+                            <div class="zone-critical"></div>
+                        </div>
+                        <div class="tension-fill weak" id="tensionBar" style="width: 0%"></div>
+                    </div>
+                    <div class="tension-markers">
+                        <span>0%</span>
+                        <span>50%</span>
+                        <span>75%</span>
+                        <span>90%</span>
+                        <span>100%</span>
+                    </div>
                 </div>
-                <div class="tension-fill weak" id="tensionBar" style="width: 0%"></div>
-            </div>
-            <div class="tension-markers">
-                <span>0</span>
-                <span>60</span>
-                <span>85</span>
-                <span>100</span>
+
+                <button class="reel-button" id="reelButton">
+                    🎣
+                    <div class="reel-text">ДЕРЖИ</div>
+                </button>
             </div>
         </div>
-
-        <button class="reel-button" id="reelButton">
-            🎣
-            <div class="reel-text">ДЕРЖИ</div>
-        </button>
     </div>
 
     <!-- Game Result Modal -->
@@ -1057,36 +1182,41 @@
         let lastJerkTime = Date.now();
         let animationFrameId = null;
         let lastHapticTime = 0;
+        let fishVelocity = 0;
 
-        // Fish configurations
+        // Fish configurations with starting depths
         const FISH_CONFIGS = {
             common: {
-                depthChangeRate: 8,
+                startDepth: 5 + Math.random() * 5,
                 jerkInterval: 2500,
-                jerkStrength: 12,
-                tensionIncreaseRate: 28,
-                tensionDecreaseRate: 22,
+                jerkStrength: 8,
+                tensionIncreaseRate: 35,
+                tensionDecreaseRate: 25,
+                resistance: 0.6,
             },
             rare: {
-                depthChangeRate: 12,
+                startDepth: 10 + Math.random() * 10,
                 jerkInterval: 2000,
-                jerkStrength: 18,
-                tensionIncreaseRate: 32,
-                tensionDecreaseRate: 20,
+                jerkStrength: 12,
+                tensionIncreaseRate: 40,
+                tensionDecreaseRate: 22,
+                resistance: 0.8,
             },
             epic: {
-                depthChangeRate: 16,
+                startDepth: 20 + Math.random() * 10,
                 jerkInterval: 1600,
-                jerkStrength: 22,
-                tensionIncreaseRate: 36,
-                tensionDecreaseRate: 18,
+                jerkStrength: 15,
+                tensionIncreaseRate: 45,
+                tensionDecreaseRate: 20,
+                resistance: 1.0,
             },
             legendary: {
-                depthChangeRate: 20,
+                startDepth: 30 + Math.random() * 20,
                 jerkInterval: 1300,
-                jerkStrength: 28,
-                tensionIncreaseRate: 40,
-                tensionDecreaseRate: 16,
+                jerkStrength: 20,
+                tensionIncreaseRate: 50,
+                tensionDecreaseRate: 18,
+                resistance: 1.3,
             },
         };
 
@@ -1224,7 +1354,11 @@
         function startFishingGame(fish) {
             currentFish = fish;
             gameActive = true;
-            fishDepth = 100;
+
+            const config = FISH_CONFIGS[fish.rarity] || FISH_CONFIGS.common;
+            fishDepth = config.startDepth;
+            fishVelocity = 0;
+
             tension = 35 + Math.random() * 10;
             isHolding = false;
             lastUpdateTime = Date.now();
@@ -1235,8 +1369,11 @@
             gameOverlay.classList.add('active');
 
             // Устанавливаем название рыбы
-            document.getElementById('gameFishName').textContent = fish.name;
-            document.getElementById('gameInstruction').textContent = 'Держи кнопку чтобы поднять рыбу!';
+            document.getElementById('gameFishName').textContent = '??? Неизвестная рыба';
+            document.getElementById('gameInstruction').textContent = 'Держи натяжение в зелёной зоне!';
+
+            // Создаём метки глубины
+            createDepthMarkers(config.startDepth);
 
             // Сбрасываем UI
             updateGameUI();
@@ -1246,6 +1383,27 @@
 
             // Вибрация старта
             triggerHaptic('medium');
+        }
+
+        // Создание меток глубины
+        function createDepthMarkers(maxDepth) {
+            const markersContainer = document.getElementById('depthMarkers');
+            markersContainer.innerHTML = '';
+
+            const maxDisplayDepth = Math.ceil(maxDepth / 5) * 5 + 5;
+            const step = 5;
+
+            for (let depth = 0; depth <= maxDisplayDepth; depth += step) {
+                const marker = document.createElement('div');
+                marker.className = 'depth-marker';
+                marker.style.top = (depth / maxDisplayDepth * 100) + '%';
+
+                const label = document.createElement('span');
+                label.textContent = depth + 'м';
+                marker.appendChild(label);
+
+                markersContainer.appendChild(marker);
+            }
         }
 
         // Игровой цикл
@@ -1258,20 +1416,36 @@
 
             const config = FISH_CONFIGS[currentFish.rarity] || FISH_CONFIGS.common;
 
-            // Изменение глубины и натяжения
+            // НОВАЯ МЕХАНИКА: натяжение управляется кнопкой
             if (isHolding) {
-                // Держим кнопку: рыба поднимается, натяжение растет
-                fishDepth -= config.depthChangeRate * deltaTime;
                 tension += config.tensionIncreaseRate * deltaTime;
             } else {
-                // Отпустили: рыба уходит вниз, натяжение падает
-                fishDepth += config.depthChangeRate * deltaTime * 0.7;
                 tension -= config.tensionDecreaseRate * deltaTime;
             }
 
-            // Ограничиваем значения
-            fishDepth = Math.max(0, Math.min(100, fishDepth));
+            // Ограничиваем натяжение
             tension = Math.max(0, Math.min(100, tension));
+
+            // НОВАЯ МЕХАНИКА: рыба поднимается только в зелёной зоне (50-75%)
+            const inGreenZone = tension >= 50 && tension <= 75;
+
+            if (inGreenZone) {
+                // В зелёной зоне - рыба поднимается
+                fishVelocity = -2.5 - config.resistance * 0.5;
+            } else if (tension < 50) {
+                // Слабое натяжение - рыба медленно уходит вниз
+                fishVelocity = 0.8 + config.resistance * 0.3;
+            } else {
+                // Слишком сильное натяжение - рыба стоит или медленно уходит
+                fishVelocity = 0.3 + config.resistance * 0.2;
+            }
+
+            // Плавное изменение глубины
+            fishDepth += fishVelocity * deltaTime * 10;
+
+            // Ограничиваем глубину
+            const maxDepth = config.startDepth + 5;
+            fishDepth = Math.max(0, Math.min(maxDepth, fishDepth));
 
             // Проверка на обрыв лески
             if (tension >= 100) {
@@ -1285,14 +1459,14 @@
                 return;
             }
 
-            // Рывки рыбы
+            // Рывки рыбы (плавные, реалистичные)
             if (now - lastJerkTime > config.jerkInterval) {
                 applyJerk(config);
             }
 
             // Вибрация в критической зоне
-            if (tension >= 85) {
-                if (Math.random() > 0.8) triggerHaptic('light');
+            if (tension >= 90) {
+                if (Math.random() > 0.7) triggerHaptic('light');
             }
 
             // Обновляем UI
@@ -1301,13 +1475,13 @@
             animationFrameId = requestAnimationFrame(gameLoop);
         }
 
-        // Применить рывок рыбы
+        // Применить рывок рыбы (плавный)
         function applyJerk(config) {
-            // Рыба делает рывок вниз и увеличивает натяжение
-            fishDepth += config.jerkStrength * (0.8 + Math.random() * 0.4);
-            tension += config.jerkStrength * 0.8 * (0.7 + Math.random() * 0.6);
+            // Плавный рывок - добавляем к скорости, а не к позиции
+            const jerkForce = config.jerkStrength * (0.7 + Math.random() * 0.6);
+            fishVelocity += jerkForce * 0.15;
+            tension += jerkForce * 0.5;
 
-            fishDepth = Math.min(100, fishDepth);
             tension = Math.min(100, tension);
 
             lastJerkTime = Date.now();
@@ -1316,36 +1490,39 @@
 
         // Обновление UI игры
         function updateGameUI() {
-            // Прогресс вылова (инвертированная глубина)
-            const catchProgress = 100 - fishDepth;
-            document.getElementById('catchProgressBar').style.width = catchProgress + '%';
-            document.getElementById('catchProgressText').textContent = Math.floor(catchProgress) + '%';
-
             // Натяжение
             const tensionBar = document.getElementById('tensionBar');
             tensionBar.style.width = tension + '%';
 
             // Цвет и статус натяжения
             const tensionStatus = document.getElementById('tensionStatus');
-            tensionBar.classList.remove('weak', 'good', 'critical');
+            tensionBar.classList.remove('weak', 'good', 'warning', 'critical');
+            tensionStatus.classList.remove('weak', 'good', 'warning', 'critical');
 
-            if (tension >= 95) {
+            if (tension >= 90) {
                 tensionStatus.textContent = 'ОБРЫВ!';
-                tensionStatus.className = 'tension-status critical';
+                tensionStatus.classList.add('critical');
                 tensionBar.classList.add('critical');
-            } else if (tension >= 85) {
-                tensionStatus.textContent = 'КРИТИЧНО!';
-                tensionStatus.className = 'tension-status critical';
-                tensionBar.classList.add('critical');
-            } else if (tension >= 60) {
+            } else if (tension >= 75) {
+                tensionStatus.textContent = 'ОПАСНО!';
+                tensionStatus.classList.add('warning');
+                tensionBar.classList.add('warning');
+            } else if (tension >= 50) {
                 tensionStatus.textContent = 'ОТЛИЧНО!';
-                tensionStatus.className = 'tension-status good';
+                tensionStatus.classList.add('good');
                 tensionBar.classList.add('good');
             } else {
                 tensionStatus.textContent = 'СЛАБО';
-                tensionStatus.className = 'tension-status weak';
+                tensionStatus.classList.add('weak');
                 tensionBar.classList.add('weak');
             }
+
+            // Позиция рыбы на шкале глубины
+            const config = FISH_CONFIGS[currentFish.rarity] || FISH_CONFIGS.common;
+            const maxDepth = config.startDepth + 5;
+            const fishIndicator = document.getElementById('fishIndicator');
+            const depthPercent = (fishDepth / maxDepth) * 100;
+            fishIndicator.style.top = depthPercent + '%';
         }
 
         // Завершение игры
@@ -1376,7 +1553,7 @@
                     displayFish(currentFish);
                     loadUserData();
                     document.getElementById('fishButton').disabled = false;
-                }, 2000);
+                }, 2500);
             } else {
                 resultIcon.textContent = '💔';
                 resultTitle.textContent = 'Леска порвалась!';
@@ -1387,7 +1564,7 @@
                     gameOverlay.classList.remove('active');
                     resultModal.classList.remove('show');
                     document.getElementById('fishButton').disabled = false;
-                }, 2000);
+                }, 2500);
             }
 
             resultModal.classList.add('show');
