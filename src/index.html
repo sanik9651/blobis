@@ -70,7 +70,7 @@
             gap: 10px;
             font-size: 2.2em;
             font-weight: 700;
-            color: #ffffff;
+            color: #FFD700;
             letter-spacing: -1px;
         }
 
@@ -618,9 +618,8 @@
             max-height: 500px;
             background: #000000;
             border-radius: 12px;
-            border: 2px solid #FFD700;
-            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3), inset 0 2px 10px rgba(0, 0, 0, 0.8);
-            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), inset 0 2px 10px rgba(0, 0, 0, 0.8);
             overflow: hidden;
         }
 
@@ -631,7 +630,7 @@
             left: 0;
             right: 0;
             height: 30px;
-            background: linear-gradient(180deg, rgba(255, 215, 0, 0.1), transparent);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent);
             pointer-events: none;
         }
 
@@ -648,7 +647,7 @@
             left: 0;
             right: 0;
             height: 1px;
-            background: rgba(255, 215, 0, 0.2);
+            background: rgba(255, 255, 255, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -656,8 +655,8 @@
 
         .depth-marker span {
             font-size: 0.65em;
-            color: #FFD700;
-            font-weight: 700;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 600;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
         }
 
@@ -667,7 +666,7 @@
             transform: translateX(-50%);
             font-size: 2em;
             transition: top 0.15s ease-out;
-            filter: drop-shadow(0 2px 8px rgba(255, 215, 0, 0.4));
+            filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.3));
         }
 
         .game-center {
@@ -688,7 +687,7 @@
             display: flex;
             justify-content: space-between;
             margin-bottom: 12px;
-            color: #ffffff;
+            color: rgba(255, 255, 255, 0.7);
             font-weight: 600;
             font-size: 0.95em;
             text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
@@ -731,7 +730,7 @@
             background: #000000;
             border-radius: 22px;
             overflow: hidden;
-            border: 2px solid rgba(255, 215, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             position: relative;
             box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.9), 0 4px 16px rgba(0, 0, 0, 0.5);
         }
@@ -746,27 +745,27 @@
         }
 
         .zone-weak {
-            width: 58%;
+            width: 55%;
             background: rgba(60, 60, 60, 0.3);
-            border-right: 1px solid rgba(255, 215, 0, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .zone-good {
-            width: 10%;
-            background: rgba(255, 215, 0, 0.15);
-            border-right: 1px solid rgba(255, 215, 0, 0.15);
-            box-shadow: inset 0 0 15px rgba(255, 215, 0, 0.1);
+            width: 17%;
+            background: rgba(34, 197, 94, 0.2);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 0 15px rgba(34, 197, 94, 0.15);
         }
 
         .zone-warning {
-            width: 22%;
-            background: rgba(255, 165, 0, 0.1);
-            border-right: 1px solid rgba(255, 215, 0, 0.15);
+            width: 16%;
+            background: rgba(234, 179, 8, 0.15);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .zone-critical {
-            width: 10%;
-            background: rgba(255, 59, 48, 0.15);
+            width: 12%;
+            background: rgba(239, 68, 68, 0.2);
         }
 
         .tension-fill {
@@ -797,13 +796,13 @@
         }
 
         .tension-fill.good {
-            background: linear-gradient(90deg, #B8860B, #FFD700, #FFA500);
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), inset 0 2px 8px rgba(255, 255, 255, 0.3);
+            background: linear-gradient(90deg, #16a34a, #22c55e);
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.5), inset 0 2px 8px rgba(255, 255, 255, 0.2);
         }
 
         .tension-fill.warning {
-            background: linear-gradient(90deg, #FF8C00, #FFA500);
-            box-shadow: 0 0 20px rgba(255, 165, 0, 0.5);
+            background: linear-gradient(90deg, #ca8a04, #eab308);
+            box-shadow: 0 0 20px rgba(234, 179, 8, 0.5);
         }
 
         .tension-fill.critical {
@@ -816,7 +815,7 @@
             justify-content: space-between;
             margin-top: 8px;
             font-size: 0.75em;
-            color: rgba(255, 215, 0, 0.5);
+            color: rgba(255, 255, 255, 0.4);
             font-weight: 600;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
         }
@@ -826,7 +825,7 @@
             height: 200px;
             border-radius: 50%;
             background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 50%, #0a0a0a 100%);
-            border: 4px solid #FFD700;
+            border: 4px solid rgba(255, 255, 255, 0.3);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -835,9 +834,9 @@
             cursor: pointer;
             transition: all 0.1s ease;
             box-shadow:
-                0 8px 32px rgba(255, 215, 0, 0.4),
-                0 0 0 8px rgba(255, 215, 0, 0.1),
-                inset 0 4px 12px rgba(255, 215, 0, 0.2),
+                0 8px 32px rgba(0, 0, 0, 0.6),
+                0 0 0 8px rgba(255, 255, 255, 0.05),
+                inset 0 4px 12px rgba(255, 255, 255, 0.1),
                 inset 0 -4px 12px rgba(0, 0, 0, 0.5);
             user-select: none;
             -webkit-user-select: none;
@@ -852,7 +851,7 @@
             left: 15%;
             right: 15%;
             height: 25%;
-            background: radial-gradient(ellipse at center, rgba(255, 215, 0, 0.2), transparent);
+            background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.08), transparent);
             border-radius: 50%;
             pointer-events: none;
         }
@@ -860,11 +859,11 @@
         .reel-button:active {
             transform: scale(0.92);
             box-shadow:
-                0 4px 20px rgba(255, 215, 0, 0.5),
-                0 0 0 8px rgba(255, 215, 0, 0.1),
-                inset 0 4px 12px rgba(255, 215, 0, 0.3),
+                0 4px 20px rgba(0, 0, 0, 0.7),
+                0 0 0 8px rgba(255, 255, 255, 0.05),
+                inset 0 4px 12px rgba(255, 255, 255, 0.15),
                 inset 0 -4px 12px rgba(0, 0, 0, 0.6);
-            border-color: #FFA500;
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
         .reel-button.disabled {
@@ -875,10 +874,10 @@
         .reel-text {
             font-size: 0.26em;
             font-weight: 700;
-            color: #FFD700;
+            color: #ffffff;
             margin-top: 8px;
             letter-spacing: 1.5px;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8), 0 0 10px rgba(255, 215, 0, 0.5);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
         }
 
         .game-result {
@@ -1118,9 +1117,9 @@
                     </div>
                     <div class="tension-markers">
                         <span>0%</span>
-                        <span>50%</span>
-                        <span>75%</span>
-                        <span>90%</span>
+                        <span>55%</span>
+                        <span>72%</span>
+                        <span>88%</span>
                         <span>100%</span>
                     </div>
                 </div>
@@ -1171,7 +1170,7 @@
             common: {
                 startDepth: 8 + Math.random() * 7,
                 jerkInterval: 2200,
-                jerkStrength: 15,
+                jerkStrength: 22,
                 tensionIncreaseRate: 22,
                 tensionDecreaseRate: 38,
                 resistance: 1.2,
@@ -1180,7 +1179,7 @@
             rare: {
                 startDepth: 15 + Math.random() * 10,
                 jerkInterval: 1800,
-                jerkStrength: 22,
+                jerkStrength: 28,
                 tensionIncreaseRate: 24,
                 tensionDecreaseRate: 42,
                 resistance: 1.6,
@@ -1189,7 +1188,7 @@
             epic: {
                 startDepth: 25 + Math.random() * 12,
                 jerkInterval: 1400,
-                jerkStrength: 28,
+                jerkStrength: 35,
                 tensionIncreaseRate: 26,
                 tensionDecreaseRate: 46,
                 resistance: 2.0,
@@ -1198,7 +1197,7 @@
             legendary: {
                 startDepth: 35 + Math.random() * 20,
                 jerkInterval: 1100,
-                jerkStrength: 35,
+                jerkStrength: 45,
                 tensionIncreaseRate: 28,
                 tensionDecreaseRate: 50,
                 resistance: 2.5,
@@ -1359,7 +1358,7 @@
 
             // Устанавливаем название рыбы
             document.getElementById('gameFishName').textContent = '??? Неизвестная рыба';
-            document.getElementById('gameInstruction').textContent = 'Держи натяжение в золотой зоне!';
+            document.getElementById('gameInstruction').textContent = 'Держи натяжение в зелёной зоне!';
 
             // Создаём метки глубины
             createDepthMarkers(config.startDepth);
@@ -1428,32 +1427,36 @@
             tension = Math.max(0, Math.min(100, tension));
             targetTension = Math.max(0, Math.min(100, targetTension));
 
-            // УЗКАЯ ЗОЛОТАЯ ЗОНА: 58-68% (всего 10%)
-            const inGoldenZone = tension >= 58 && tension <= 68;
-
-            // МЕДЛЕННЫЙ ПОДЪЁМ: даже в золотой зоне рыба поднимается очень медленно
-            if (inGoldenZone) {
-                fishVelocity = -config.reelSpeed - config.resistance * 0.15;
-            } else if (tension < 58) {
-                // Слабое натяжение - рыба уходит вниз быстрее
-                fishVelocity = 1.2 + config.resistance * 0.5;
-            } else {
-                // Слишком сильное натяжение - рыба сопротивляется
-                fishVelocity = 0.6 + config.resistance * 0.3;
+            // КРИТИЧЕСКИЙ ОБРЫВ при 88%!
+            if (tension >= 88) {
+                endGame(false, 'break');
+                return;
             }
 
-            // Плавное изменение глубины (в 3-4 раза медленнее)
+            // ЗОНЫ: Хорошо 55-72%, Опасно 72-88%, Критично 88%+
+            const inGoodZone = tension >= 55 && tension < 72;
+            const inWarningZone = tension >= 72 && tension < 88;
+
+            // Подъём рыбы только в хорошей зоне
+            if (inGoodZone) {
+                fishVelocity = -config.reelSpeed - config.resistance * 0.15;
+            } else if (tension < 55) {
+                // Слабое натяжение - рыба уходит вниз быстрее
+                fishVelocity = 1.2 + config.resistance * 0.5;
+            } else if (inWarningZone) {
+                // Опасная зона - рыба сопротивляется, не поднимается
+                fishVelocity = 0.6 + config.resistance * 0.3;
+            } else {
+                // Критическая зона - рыба сильно сопротивляется
+                fishVelocity = 0.8 + config.resistance * 0.4;
+            }
+
+            // Плавное изменение глубины
             fishDepth += fishVelocity * deltaTime * 3.5;
 
             // Ограничиваем глубину
             const maxDepth = config.startDepth + 5;
             fishDepth = Math.max(0, Math.min(maxDepth, fishDepth));
-
-            // Проверка на обрыв лески
-            if (tension >= 100) {
-                endGame(false, 'break');
-                return;
-            }
 
             // Проверка на победу
             if (fishDepth <= 0) {
@@ -1467,7 +1470,7 @@
             }
 
             // Вибрация в критической зоне
-            if (tension >= 90) {
+            if (tension >= 80) {
                 if (Math.random() > 0.7) triggerHaptic('light');
             }
 
@@ -1477,18 +1480,22 @@
             animationFrameId = requestAnimationFrame(gameLoop);
         }
 
-        // Применить рывок рыбы (усиленный)
+        // Применить рывок рыбы (плавный но опасный)
         function applyJerk(config) {
-            const jerkForce = config.jerkStrength * (0.8 + Math.random() * 0.7);
+            // Рывок с вариацией 0.9-1.4x от базовой силы
+            const jerkForce = config.jerkStrength * (0.9 + Math.random() * 0.5);
 
-            // Рывок влияет на целевое натяжение и скорость
-            targetTension += jerkForce * 1.2;
-            fishVelocity += jerkForce * 0.25;
+            // Плавное увеличение натяжения через targetTension
+            targetTension += jerkForce * 1.3;
 
-            // Добавляем случайное изменение дрейфа
-            driftPhase += (Math.random() - 0.5) * 2;
+            // Небольшое влияние на скорость рыбы
+            fishVelocity += jerkForce * 0.15;
 
-            targetTension = Math.min(100, targetTension);
+            // Добавляем случайное изменение дрейфа для непредсказуемости
+            driftPhase += (Math.random() - 0.5) * 1.5;
+
+            // Ограничиваем, но позволяем достичь критической зоны
+            targetTension = Math.min(95, targetTension);
 
             lastJerkTime = Date.now();
             triggerHaptic('medium');
@@ -1500,21 +1507,21 @@
             const tensionBar = document.getElementById('tensionBar');
             tensionBar.style.width = tension + '%';
 
-            // Цвет и статус натяжения
+            // Цвет и статус натяжения (новые зоны: 55-72% хорошо, 72-88% опасно, 88%+ обрыв)
             const tensionStatus = document.getElementById('tensionStatus');
             tensionBar.classList.remove('weak', 'good', 'warning', 'critical');
             tensionStatus.classList.remove('weak', 'good', 'warning', 'critical');
 
-            if (tension >= 90) {
+            if (tension >= 88) {
                 tensionStatus.textContent = 'ОБРЫВ!';
                 tensionStatus.classList.add('critical');
                 tensionBar.classList.add('critical');
-            } else if (tension >= 68) {
+            } else if (tension >= 72) {
                 tensionStatus.textContent = 'ОПАСНО!';
                 tensionStatus.classList.add('warning');
                 tensionBar.classList.add('warning');
-            } else if (tension >= 58) {
-                tensionStatus.textContent = 'ОТЛИЧНО!';
+            } else if (tension >= 55) {
+                tensionStatus.textContent = 'ХОРОШО!';
                 tensionStatus.classList.add('good');
                 tensionBar.classList.add('good');
             } else {
