@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>Blobis - Рыбалка</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="/webapp/fishGenerator.js"></script>
     <style>
         * {
             margin: 0;
@@ -740,6 +741,285 @@
 
         .sub-tab-content.active {
             display: block;
+        }
+
+        /* Fish Card */
+        .fish-card {
+            width: 100%;
+            max-width: 320px;
+            height: 420px;
+            perspective: 1000px;
+            margin: 0 auto;
+        }
+
+        .fish-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .fish-card.flipped .fish-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .fish-card-front,
+        .fish-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .fish-card-back {
+            transform: rotateY(180deg);
+        }
+
+        .fish-card-front {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .fish-card-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+        }
+
+        .fish-card-bg.common {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .fish-card-bg.rare {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .fish-card-bg.epic {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .fish-card-bg.legendary {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .fish-card-bg.mythical {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+            animation: mythicalGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes mythicalGlow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        .fish-svg-container {
+            position: relative;
+            z-index: 1;
+            width: 200px;
+            height: 200px;
+            margin-bottom: 20px;
+        }
+
+        .fish-card-back {
+            background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .fish-card-name {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #fcc100;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .fish-card-rarity {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .fish-card-rarity.common { background: #667eea; color: white; }
+        .fish-card-rarity.rare { background: #f5576c; color: white; }
+        .fish-card-rarity.epic { background: #00f2fe; color: #000; }
+        .fish-card-rarity.legendary { background: #fee140; color: #000; }
+        .fish-card-rarity.mythical { background: linear-gradient(90deg, #30cfd0, #330867); color: white; }
+
+        .fish-card-stats {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .fish-card-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .fish-card-stat-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9em;
+        }
+
+        .fish-card-stat-value {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            padding: 20px;
+        }
+
+        .inventory-fish-item {
+            aspect-ratio: 1;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+        }
+
+        .inventory-fish-item:active {
+            transform: scale(0.95);
+        }
+
+        .inventory-fish-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .fish-mini-visual {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .fish-mini-visual svg {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .fish-mini-name {
+            font-size: 11px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 4px;
+        }
+
+        .inventory-fish-item.common {
+            background: rgba(74, 74, 74, 0.2);
+            border: 1px solid rgba(74, 74, 74, 0.4);
+        }
+
+        .inventory-fish-item.rare {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+
+        .inventory-fish-item.epic {
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+        }
+
+        .inventory-fish-item.legendary {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+        }
+
+        .inventory-fish-item.mythical {
+            background: rgba(236, 72, 153, 0.2);
+            border: 1px solid rgba(236, 72, 153, 0.4);
+        }
+
+        /* Fish Card Overlay */
+        .fish-card-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            padding: 20px;
+        }
+
+        .fish-card-overlay.active {
+            opacity: 1;
+        }
+
+        .fish-card-hint {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+        }
+
+        .fish-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .stat-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.95);
         }
 
         /* Fishing Mini-Game */
@@ -1726,6 +2006,7 @@
         <div class="result-message" id="resultMessage">Отличная работа!</div>
     </div>
 
+    <script src="fishGenerator.js"></script>
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
@@ -1975,6 +2256,9 @@
             document.getElementById('coins').textContent = Math.floor(userData.coins).toLocaleString();
             document.getElementById('level').textContent = userData.level;
             document.getElementById('totalFish').textContent = userData.total_fish_caught;
+
+            // Обновляем UI инвентаря
+            updateInventoryUI();
         }
 
         function switchTab(tabName) {
@@ -2337,11 +2621,19 @@
                 resultMessage.textContent = `${currentFish.name} добавлена в инвентарь!`;
                 triggerHaptic('heavy');
 
-                // Показываем результат на главном экране
+                // Генерируем процедурную рыбу
+                const seed = currentFish.seed || Date.now();
+                const depth = currentFish.depth || 0.3;
+                const proceduralFish = generateFish(seed, depth);
+
+                // Добавляем в инвентарь
+                addFishToInventory(proceduralFish);
+
+                // Показываем карточку рыбы
                 setTimeout(() => {
                     gameOverlay.classList.remove('active');
                     resultModal.classList.remove('show');
-                    displayFish(currentFish);
+                    showFishCard(proceduralFish);
                     loadUserData();
                     document.getElementById('fishButton').disabled = false;
                 }, 2500);
@@ -2409,6 +2701,137 @@
             isHolding = false;
         });
 
+
+        // Инвентарь пойманных рыб
+        let caughtFish = JSON.parse(localStorage.getItem('caughtFish') || '[]');
+
+        // Добавить рыбу в инвентарь
+        function addFishToInventory(fish) {
+            caughtFish.push(fish);
+            localStorage.setItem('caughtFish', JSON.stringify(caughtFish));
+            updateInventoryUI();
+        }
+
+        // Показать карточку рыбы с анимацией переворота
+        function showFishCard(fish) {
+            const overlay = document.createElement('div');
+            overlay.className = 'fish-card-overlay';
+            overlay.innerHTML = `
+                <div class="fish-card" onclick="this.classList.toggle('flipped')">
+                    <div class="fish-card-inner">
+                        <!-- Лицевая сторона: визуал рыбы -->
+                        <div class="fish-card-front">
+                            <div class="fish-card-bg ${fish.rarity.toLowerCase()}">
+                                <div class="fish-visual">
+                                    ${generateFishSVG(fish.visualParams, 200)}
+                                </div>
+                                <div class="fish-card-name">${fish.name}</div>
+                                <div class="fish-card-rarity">${getRarityName(fish.rarity)}</div>
+                            </div>
+                        </div>
+                        <!-- Обратная сторона: характеристики -->
+                        <div class="fish-card-back">
+                            <div class="fish-card-bg ${fish.rarity.toLowerCase()}">
+                                <h3>${fish.name}</h3>
+                                <div class="fish-stats">
+                                    <div class="stat-row">
+                                        <span class="stat-label">💎 Редкость:</span>
+                                        <span class="stat-value">${getRarityName(fish.rarity)}</span>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span class="stat-label">⚖️ Вес:</span>
+                                        <span class="stat-value">${fish.weight} кг</span>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span class="stat-label">📏 Глубина:</span>
+                                        <span class="stat-value">${(fish.depth * 100).toFixed(0)}м</span>
+                                    </div>
+                                    <div class="stat-row">
+                                        <span class="stat-label">🐟 Характер:</span>
+                                        <span class="stat-value">${fish.temperament}</span>
+                                    </div>
+                                </div>
+                                <div class="fish-card-hint">Нажми, чтобы перевернуть</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+            setTimeout(() => overlay.classList.add('active'), 10);
+
+            // Закрытие по клику на фон
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                    setTimeout(() => overlay.remove(), 300);
+                }
+            });
+
+            // Автоматическое закрытие через 10 секунд
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                setTimeout(() => overlay.remove(), 300);
+            }, 10000);
+        }
+
+        // Получить название редкости на русском
+        function getRarityName(rarity) {
+            const names = {
+                'Common': 'Обычная',
+                'Rare': 'Редкая',
+                'Epic': 'Эпическая',
+                'Legendary': 'Легендарная',
+                'Mythical': 'Мифическая'
+            };
+            return names[rarity] || rarity;
+        }
+
+        // Обновить UI инвентаря
+        function updateInventoryUI() {
+            const catchGrid = document.getElementById('inventory-catch');
+            if (!catchGrid) return;
+
+            if (caughtFish.length === 0) {
+                catchGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <svg width="64" height="64" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <linearGradient id="invGradBig" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#d47100;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#fcc100;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <rect x="3" y="4" width="18" height="18" rx="2" stroke="url(#invGradBig)" stroke-width="2" fill="none"/>
+                                <line x1="8" y1="10" x2="16" y2="10" stroke="url(#invGradBig)" stroke-width="2" stroke-linecap="round"/>
+                                <line x1="8" y1="14" x2="16" y2="14" stroke="url(#invGradBig)" stroke-width="2" stroke-linecap="round"/>
+                                <line x1="8" y1="18" x2="16" y2="18" stroke="url(#invGradBig)" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="empty-state-text">Пока нет пойманной рыбы</div>
+                    </div>
+                `;
+                return;
+            }
+
+            catchGrid.innerHTML = '<div class="inventory-grid"></div>';
+            const grid = catchGrid.querySelector('.inventory-grid');
+
+            caughtFish.forEach((fish, index) => {
+                const fishItem = document.createElement('div');
+                fishItem.className = `inventory-fish-item ${fish.rarity.toLowerCase()}`;
+                fishItem.innerHTML = `
+                    <div class="fish-mini-visual">
+                        ${generateFishSVG(fish.visualParams, 80)}
+                    </div>
+                    <div class="fish-mini-name">${fish.name}</div>
+                `;
+                fishItem.onclick = () => showFishCard(fish);
+                grid.appendChild(fishItem);
+            });
+        }
 
         function displayFish(fish) {
             const result = document.getElementById('result');
