@@ -1022,6 +1022,87 @@
             color: rgba(255, 255, 255, 0.95);
         }
 
+        /* Rod Customization */
+        .rod-customization {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .rod-param {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .rod-param label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .slider-container input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #d47100, #fcc100);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(252, 193, 0, 0.4);
+        }
+
+        .slider-container input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #d47100, #fcc100);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(252, 193, 0, 0.4);
+        }
+
+        .slider-container span {
+            min-width: 60px;
+            text-align: right;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fcc100;
+        }
+
+        .reset-rod-button {
+            margin-top: 12px;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .reset-rod-button:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
         /* Fishing Mini-Game */
         .fishing-game-overlay {
             position: fixed;
@@ -1780,9 +1861,67 @@
                     <!-- Rod Sub-tab -->
                     <div class="sub-tab-content" id="inventory-rod">
                         <div style="padding: 20px;">
-                            <h3 style="color: #fcc100; margin-bottom: 16px; font-size: 1.1em;">Конструктор удочки</h3>
-                            <div class="empty-state">
-                                <div class="empty-state-text">Функционал в разработке</div>
+                            <h3 style="color: #fcc100; margin-bottom: 16px; font-size: 1.1em;">⚙️ Настройка удочки (тест)</h3>
+
+                            <div class="rod-customization">
+                                <!-- Сила рывков -->
+                                <div class="rod-param">
+                                    <label for="jerkStrength">Сила рывков рыбы:</label>
+                                    <div class="slider-container">
+                                        <input type="range" id="jerkStrength" min="10" max="60" value="22" step="1">
+                                        <span id="jerkStrengthValue">22</span>
+                                    </div>
+                                </div>
+
+                                <!-- Длина зелёной зоны -->
+                                <div class="rod-param">
+                                    <label for="greenZoneSize">Размер зелёной зоны:</label>
+                                    <div class="slider-container">
+                                        <input type="range" id="greenZoneSize" min="10" max="40" value="30" step="1">
+                                        <span id="greenZoneSizeValue">30%</span>
+                                    </div>
+                                </div>
+
+                                <!-- Скорость поимки -->
+                                <div class="rod-param">
+                                    <label for="reelSpeed">Скорость подъёма:</label>
+                                    <div class="slider-container">
+                                        <input type="range" id="reelSpeed" min="0.3" max="1.5" value="0.7" step="0.05">
+                                        <span id="reelSpeedValue">0.7x</span>
+                                    </div>
+                                </div>
+
+                                <!-- Интервал рывков -->
+                                <div class="rod-param">
+                                    <label for="jerkInterval">Интервал рывков (мс):</label>
+                                    <div class="slider-container">
+                                        <input type="range" id="jerkInterval" min="800" max="3000" value="2200" step="100">
+                                        <span id="jerkIntervalValue">2200</span>
+                                    </div>
+                                </div>
+
+                                <!-- Скорость роста натяжения -->
+                                <div class="rod-param">
+                                    <label for="tensionIncrease">Скорость роста натяжения:</label>
+                                    <div class="slider-container">
+                                        <input type="range" id="tensionIncrease" min="10" max="40" value="22" step="1">
+                                        <span id="tensionIncreaseValue">22</span>
+                                    </div>
+                                </div>
+
+                                <!-- Скорость падения натяжения -->
+                                <div class="rod-param">
+                                    <label for="tensionDecrease">Скорость падения натяжения:</label>
+                                    <div class="slider-container">
+                                        <input type="range" id="tensionDecrease" min="20" max="60" value="38" step="1">
+                                        <span id="tensionDecreaseValue">38</span>
+                                    </div>
+                                </div>
+
+                                <button class="reset-rod-button" onclick="resetRodSettings()">Сбросить настройки</button>
+                                <div style="margin-top: 12px; font-size: 12px; color: rgba(255,255,255,0.5); text-align: center;">
+                                    Настройки применяются к следующей рыбалке
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2152,6 +2291,16 @@
         let userData = null;
         let currentTab = 'fishing';
 
+        // Rod customization settings
+        let customRodSettings = JSON.parse(localStorage.getItem('customRodSettings') || 'null') || {
+            jerkStrength: 22,
+            greenZoneSize: 30,
+            reelSpeed: 0.7,
+            jerkInterval: 2200,
+            tensionIncrease: 22,
+            tensionDecrease: 38
+        };
+
         // Fishing Mini-Game Variables
         let gameActive = false;
         let currentFish = null;
@@ -2168,43 +2317,50 @@
         let holdDuration = 0;
 
         // Fish configurations with starting depths
+        function getFishConfig(rarity) {
+            const baseConfigs = {
+                common: {
+                    startDepth: 8 + Math.random() * 7,
+                    resistance: 1.2,
+                    multiplier: 1.0
+                },
+                rare: {
+                    startDepth: 15 + Math.random() * 10,
+                    resistance: 1.6,
+                    multiplier: 1.3
+                },
+                epic: {
+                    startDepth: 25 + Math.random() * 12,
+                    resistance: 2.0,
+                    multiplier: 1.6
+                },
+                legendary: {
+                    startDepth: 35 + Math.random() * 20,
+                    resistance: 2.5,
+                    multiplier: 2.0
+                },
+            };
+
+            const base = baseConfigs[rarity] || baseConfigs.common;
+            const mult = base.multiplier;
+
+            return {
+                startDepth: base.startDepth,
+                jerkInterval: customRodSettings.jerkInterval,
+                jerkStrength: customRodSettings.jerkStrength * mult,
+                tensionIncreaseRate: customRodSettings.tensionIncrease,
+                tensionDecreaseRate: customRodSettings.tensionDecrease,
+                resistance: base.resistance,
+                reelSpeed: customRodSettings.reelSpeed,
+                greenZoneSize: customRodSettings.greenZoneSize
+            };
+        }
+
         const FISH_CONFIGS = {
-            common: {
-                startDepth: 8 + Math.random() * 7,
-                jerkInterval: 2200,
-                jerkStrength: 22,
-                tensionIncreaseRate: 22,
-                tensionDecreaseRate: 38,
-                resistance: 1.2,
-                reelSpeed: 0.7,
-            },
-            rare: {
-                startDepth: 15 + Math.random() * 10,
-                jerkInterval: 1800,
-                jerkStrength: 28,
-                tensionIncreaseRate: 24,
-                tensionDecreaseRate: 42,
-                resistance: 1.6,
-                reelSpeed: 0.55,
-            },
-            epic: {
-                startDepth: 25 + Math.random() * 12,
-                jerkInterval: 1400,
-                jerkStrength: 35,
-                tensionIncreaseRate: 26,
-                tensionDecreaseRate: 46,
-                resistance: 2.0,
-                reelSpeed: 0.45,
-            },
-            legendary: {
-                startDepth: 35 + Math.random() * 20,
-                jerkInterval: 1100,
-                jerkStrength: 45,
-                tensionIncreaseRate: 28,
-                tensionDecreaseRate: 50,
-                resistance: 2.5,
-                reelSpeed: 0.35,
-            },
+            common: getFishConfig('common'),
+            rare: getFishConfig('rare'),
+            epic: getFishConfig('epic'),
+            legendary: getFishConfig('legendary')
         };
 
         // Получаем ID пользователя из Telegram
@@ -2369,7 +2525,7 @@
             currentFish = fish;
             gameActive = true;
 
-            const config = FISH_CONFIGS[fish.rarity] || FISH_CONFIGS.common;
+            const config = getFishConfig(fish.rarity);
             fishDepth = config.startDepth;
             fishVelocity = 0;
 
@@ -2431,7 +2587,9 @@
             const deltaTime = (now - lastUpdateTime) / 1000;
             lastUpdateTime = now;
 
-            const config = FISH_CONFIGS[currentFish.rarity] || FISH_CONFIGS.common;
+            const config = getFishConfig(currentFish.rarity);
+            const greenZoneStart = 55;
+            const greenZoneEnd = greenZoneStart + customRodSettings.greenZoneSize;
 
             // УСТАЛОСТЬ: чем дольше держишь, тем медленнее растёт натяжение
             if (isHolding) {
@@ -2463,19 +2621,16 @@
             }
 
             // ЛОГИКА СКОРОСТИ: чем больше натяжение → тем быстрее подъём
-            if (tension >= 55 && tension < 85) {
+            if (tension >= greenZoneStart && tension < 85) {
                 // Зелёная и жёлтая зоны: пропорциональная скорость подъёма
-                // 55% = 0.5x, 60% = 0.67x, 65% = 0.83x, 72% = 1.13x, 80% = 1.5x
-                const speedMultiplier = (tension - 55) / 30;
+                const speedMultiplier = (tension - greenZoneStart) / (85 - greenZoneStart);
                 fishVelocity = -(config.reelSpeed * (0.5 + speedMultiplier)) - config.resistance * 0.1;
             } else if (tension >= 85) {
                 // Красная зона (85%+) - рыба сильно сопротивляется, скоро обрыв
                 fishVelocity = 0.8 + config.resistance * 0.4;
             } else {
-                // Слабое натяжение (< 55%) - рыба опускается
-                // Чем меньше натяжение → тем быстрее опускание
-                // 50% = 0.3x, 40% = 0.6x, 30% = 0.9x, 0% = 1.2x
-                const sinkMultiplier = (55 - tension) / 55;
+                // Слабое натяжение (< greenZoneStart) - рыба опускается
+                const sinkMultiplier = (greenZoneStart - tension) / greenZoneStart;
                 fishVelocity = (0.3 + sinkMultiplier * 0.9) + config.resistance * 0.5;
             }
 
@@ -2569,20 +2724,26 @@
             const tensionBar = document.getElementById('tensionBar');
             tensionBar.style.width = tension + '%';
 
-            // Цвет и статус натяжения (новые зоны: 55-85% рабочая зона, 85%+ обрыв)
+            // Динамические зоны на основе настроек удочки
+            const greenZoneSize = customRodSettings.greenZoneSize;
+            const greenZoneStart = 55;
+            const greenZoneEnd = greenZoneStart + greenZoneSize;
+            const criticalZone = 85;
+
+            // Цвет и статус натяжения
             const tensionStatus = document.getElementById('tensionStatus');
             tensionBar.classList.remove('weak', 'good', 'warning', 'critical');
             tensionStatus.classList.remove('weak', 'good', 'warning', 'critical');
 
-            if (tension >= 85) {
+            if (tension >= criticalZone) {
                 tensionStatus.textContent = 'ОБРЫВ!';
                 tensionStatus.classList.add('critical');
                 tensionBar.classList.add('critical');
-            } else if (tension >= 72) {
+            } else if (tension >= greenZoneEnd) {
                 tensionStatus.textContent = 'БЫСТРО!';
                 tensionStatus.classList.add('warning');
                 tensionBar.classList.add('warning');
-            } else if (tension >= 55) {
+            } else if (tension >= greenZoneStart) {
                 tensionStatus.textContent = 'ХОРОШО!';
                 tensionStatus.classList.add('good');
                 tensionBar.classList.add('good');
@@ -2593,7 +2754,7 @@
             }
 
             // Позиция рыбы на шкале глубины
-            const config = FISH_CONFIGS[currentFish.rarity] || FISH_CONFIGS.common;
+            const config = getFishConfig(currentFish.rarity);
             const maxDepth = config.startDepth + 5;
             const fishIndicator = document.getElementById('fishIndicator');
             const depthPercent = (fishDepth / maxDepth) * 100;
@@ -2700,6 +2861,60 @@
             e.preventDefault();
             isHolding = false;
         });
+
+
+        // Rod Customization Functions
+        function initRodCustomization() {
+            const sliders = {
+                jerkStrength: { element: 'jerkStrength', value: 'jerkStrengthValue', suffix: '' },
+                greenZoneSize: { element: 'greenZoneSize', value: 'greenZoneSizeValue', suffix: '%' },
+                reelSpeed: { element: 'reelSpeed', value: 'reelSpeedValue', suffix: 'x' },
+                jerkInterval: { element: 'jerkInterval', value: 'jerkIntervalValue', suffix: '' },
+                tensionIncrease: { element: 'tensionIncrease', value: 'tensionIncreaseValue', suffix: '' },
+                tensionDecrease: { element: 'tensionDecrease', value: 'tensionDecreaseValue', suffix: '' }
+            };
+
+            Object.keys(sliders).forEach(key => {
+                const slider = document.getElementById(sliders[key].element);
+                const valueDisplay = document.getElementById(sliders[key].value);
+
+                if (slider && valueDisplay) {
+                    // Установить сохранённое значение
+                    slider.value = customRodSettings[key];
+                    valueDisplay.textContent = customRodSettings[key] + sliders[key].suffix;
+
+                    // Обработчик изменения
+                    slider.addEventListener('input', (e) => {
+                        const value = parseFloat(e.target.value);
+                        customRodSettings[key] = value;
+                        valueDisplay.textContent = value + sliders[key].suffix;
+                        localStorage.setItem('customRodSettings', JSON.stringify(customRodSettings));
+
+                        // Вибрация при изменении
+                        if (tg.HapticFeedback) {
+                            tg.HapticFeedback.impactOccurred('light');
+                        }
+                    });
+                }
+            });
+        }
+
+        function resetRodSettings() {
+            customRodSettings = {
+                jerkStrength: 22,
+                greenZoneSize: 30,
+                reelSpeed: 0.7,
+                jerkInterval: 2200,
+                tensionIncrease: 22,
+                tensionDecrease: 38
+            };
+            localStorage.setItem('customRodSettings', JSON.stringify(customRodSettings));
+            initRodCustomization();
+
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        }
 
 
         // Инвентарь пойманных рыб
@@ -2875,6 +3090,9 @@
 
         // Обработчики для кнопок магазина
         document.addEventListener('DOMContentLoaded', () => {
+            // Инициализация кастомизации удочки
+            initRodCustomization();
+
             document.querySelectorAll('.buy-button').forEach(button => {
                 button.addEventListener('click', () => {
                     if (tg.HapticFeedback) {

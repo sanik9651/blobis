@@ -20,39 +20,55 @@ class SeededRandom {
     }
 }
 
-// Генератор имён рыб
+// Генератор имён рыб (реалистичные названия)
 const fishNameParts = {
-    prefixes: [
-        'Золото', 'Серебро', 'Мрачный', 'Неоновый', 'Глубинный', 'Призрачный',
-        'Кристальный', 'Тёмный', 'Светящийся', 'Ледяной', 'Огненный', 'Теневой',
-        'Радужный', 'Жемчужный', 'Алмазный', 'Изумрудный', 'Рубиновый', 'Сапфировый',
-        'Янтарный', 'Коралловый', 'Лунный', 'Солнечный', 'Звёздный', 'Космический',
-        'Древний', 'Королевский', 'Императорский', 'Благородный', 'Дикий', 'Свирепый'
+    // Реальные виды рыб как основа
+    baseNames: [
+        'Окунь', 'Карп', 'Сом', 'Щука', 'Судак', 'Лещ', 'Форель', 'Сазан',
+        'Тунец', 'Марлин', 'Барракуда', 'Групер', 'Снэппер', 'Дорадо', 'Сибас',
+        'Палтус', 'Треска', 'Скат', 'Угорь', 'Мурена', 'Рыба-меч', 'Рыба-парус'
     ],
-    roots: [
-        'чешуйчатый', 'плавник', 'хвост', 'пуз', 'глаз', 'зуб', 'игло', 'шип',
-        'крыл', 'рог', 'усач', 'полос', 'пятн', 'блоб', 'морд', 'жабр',
-        'чешуй', 'перо', 'клык', 'коготь', 'панцирь', 'щит', 'меч', 'копьё'
+    // Прилагательные (отдельно)
+    adjectives: [
+        'Золотой', 'Серебряный', 'Полосатый', 'Пятнистый', 'Тигровый', 'Королевский',
+        'Императорский', 'Гигантский', 'Карликовый', 'Радужный', 'Огненный', 'Ледяной',
+        'Призрачный', 'Кристальный', 'Жемчужный', 'Коралловый', 'Изумрудный', 'Сапфировый'
     ],
-    suffixes: [
-        'ец', 'ик', 'ун', 'яр', 'ыш', 'ач', 'ох', 'юн', 'ан', 'ор',
-        '-Мутант', '-Завр', '-Дон', '-Монстр', '-Титан', '-Гигант', '-Карлик', '-Призрак'
+    // Для глубоководных
+    deepAdjectives: [
+        'Глубоководный', 'Бездонный', 'Адский', 'Проклятый', 'Древний', 'Зловещий',
+        'Кошмарный', 'Теневой', 'Призрачный', 'Мёртвый', 'Ядовитый', 'Демонический'
     ],
-    deepPrefixes: [
-        'Бездонный', 'Проклятый', 'Кошмарный', 'Ужасный', 'Мёртвый', 'Гнилой',
-        'Адский', 'Демонический', 'Зловещий', 'Жуткий', 'Страшный', 'Ядовитый'
+    // Дополнительные характеристики
+    traits: [
+        'Хищник', 'Охотник', 'Титан', 'Левиафан', 'Страж', 'Властелин',
+        'Разрушитель', 'Пожиратель', 'Ужас', 'Кошмар'
     ]
 };
 
 function generateFishName(seed, depth) {
     const rng = new SeededRandom(seed);
 
-    const prefixList = depth > 0.7 ? [...fishNameParts.prefixes, ...fishNameParts.deepPrefixes] : fishNameParts.prefixes;
-    const prefix = rng.choice(prefixList);
-    const root = rng.choice(fishNameParts.roots);
-    const suffix = rng.choice(fishNameParts.suffixes);
+    const baseName = rng.choice(fishNameParts.baseNames);
+    const useAdjective = rng.next() > 0.3; // 70% шанс на прилагательное
+    const useTrait = depth > 0.5 && rng.next() > 0.7; // 30% для глубоких рыб
 
-    return `${prefix}${root}${suffix}`;
+    let name = '';
+
+    if (useAdjective) {
+        const adjectiveList = depth > 0.7 ? fishNameParts.deepAdjectives : fishNameParts.adjectives;
+        const adjective = rng.choice(adjectiveList);
+        name = `${adjective} ${baseName}`;
+    } else {
+        name = baseName;
+    }
+
+    if (useTrait) {
+        const trait = rng.choice(fishNameParts.traits);
+        name = `${name}-${trait}`;
+    }
+
+    return name;
 }
 
 // Генератор цветов
@@ -148,74 +164,160 @@ function generateFish(seed, depth = 0.3) {
     };
 }
 
-// Генерация SVG рыбы
+// Генерация SVG рыбы (реалистичный стиль)
 function generateFishSVG(visualParams, size = 200) {
-    const { bodyLength, bodyHeight, tailWidth, finSize, spikes, asymmetricEyes, colors, isDeep } = visualParams;
+    const { bodyLength, bodyHeight, tailWidth, finSize, spikes, asymmetricEyes, colors, isDeep, seed } = visualParams;
 
+    const rng = new SeededRandom(seed + 5000);
     const scale = size / 150;
     const centerX = size / 2;
     const centerY = size / 2;
 
     const svgParts = [];
 
-    // Gooey фильтр
-    const filterId = `gooey_${Math.random().toString(36).substr(2, 9)}`;
+    // Градиенты для объёма
+    const bodyGradId = `bodyGrad_${seed}_${size}`;
+    const finGradId = `finGrad_${seed}_${size}`;
+
     svgParts.push(`
         <defs>
-            <filter id="${filterId}">
-                <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"/>
-                <feColorMatrix in="blur" mode="matrix" values="
-                    1 0 0 0 0
-                    0 1 0 0 0
-                    0 0 1 0 0
-                    0 0 0 18 -7" result="goo"/>
-                <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
-            </filter>
+            <linearGradient id="${bodyGradId}" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:${colors.body};stop-opacity:1" />
+                <stop offset="50%" style="stop-color:${colors.belly};stop-opacity:1" />
+                <stop offset="100%" style="stop-color:${colors.body};stop-opacity:0.8" />
+            </linearGradient>
+            <linearGradient id="${finGradId}" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:${colors.fins};stop-opacity:0.7" />
+                <stop offset="100%" style="stop-color:${colors.accent};stop-opacity:0.9" />
+            </linearGradient>
         </defs>
     `);
 
     const group = [];
 
-    // Хвост
-    group.push(`<ellipse cx="${centerX - bodyLength * scale * 0.4}" cy="${centerY}" rx="${tailWidth * scale}" ry="${bodyHeight * scale * 0.6}" fill="${colors.fins}"/>`);
+    // Хвостовой плавник (треугольная форма)
+    const tailX = centerX - bodyLength * scale * 0.5;
+    const tailY = centerY;
+    const tailHeight = bodyHeight * scale * 0.8;
+    group.push(`
+        <path d="M ${tailX} ${tailY}
+                 L ${tailX - tailWidth * scale} ${tailY - tailHeight}
+                 L ${tailX - tailWidth * scale * 0.7} ${tailY}
+                 L ${tailX - tailWidth * scale} ${tailY + tailHeight}
+                 Z"
+              fill="url(#${finGradId})"
+              stroke="${colors.fins}"
+              stroke-width="1"/>
+    `);
 
-    // Тело
-    group.push(`<ellipse cx="${centerX}" cy="${centerY}" rx="${bodyLength * scale * 0.5}" ry="${bodyHeight * scale * 0.5}" fill="${colors.body}"/>`);
+    // Тело (эллипс с заострённым носом)
+    const bodyPath = `
+        M ${centerX - bodyLength * scale * 0.4} ${centerY}
+        Q ${centerX - bodyLength * scale * 0.3} ${centerY - bodyHeight * scale * 0.5},
+          ${centerX} ${centerY - bodyHeight * scale * 0.45}
+        Q ${centerX + bodyLength * scale * 0.4} ${centerY - bodyHeight * scale * 0.3},
+          ${centerX + bodyLength * scale * 0.5} ${centerY}
+        Q ${centerX + bodyLength * scale * 0.4} ${centerY + bodyHeight * scale * 0.3},
+          ${centerX} ${centerY + bodyHeight * scale * 0.45}
+        Q ${centerX - bodyLength * scale * 0.3} ${centerY + bodyHeight * scale * 0.5},
+          ${centerX - bodyLength * scale * 0.4} ${centerY}
+        Z
+    `;
+    group.push(`<path d="${bodyPath}" fill="url(#${bodyGradId})" stroke="${colors.body}" stroke-width="1.5"/>`);
 
-    // Живот
-    group.push(`<ellipse cx="${centerX + bodyLength * scale * 0.1}" cy="${centerY + bodyHeight * scale * 0.2}" rx="${bodyLength * scale * 0.3}" ry="${bodyHeight * scale * 0.3}" fill="${colors.belly}"/>`);
+    // Спинной плавник
+    const dorsalX = centerX - bodyLength * scale * 0.1;
+    const dorsalY = centerY - bodyHeight * scale * 0.45;
+    group.push(`
+        <path d="M ${dorsalX} ${dorsalY}
+                 Q ${dorsalX - finSize * scale * 0.3} ${dorsalY - finSize * scale * 1.2},
+                   ${dorsalX + finSize * scale * 0.4} ${dorsalY - finSize * scale * 0.8}
+                 L ${dorsalX + finSize * scale * 0.6} ${dorsalY}
+                 Z"
+              fill="url(#${finGradId})"
+              stroke="${colors.fins}"
+              stroke-width="1"/>
+    `);
 
-    // Голова
-    group.push(`<ellipse cx="${centerX + bodyLength * scale * 0.4}" cy="${centerY}" rx="${bodyHeight * scale * 0.4}" ry="${bodyHeight * scale * 0.45}" fill="${colors.body}"/>`);
+    // Грудные плавники (пара)
+    const pectoralX = centerX + bodyLength * scale * 0.2;
+    const pectoralY = centerY;
+    group.push(`
+        <ellipse cx="${pectoralX}" cy="${pectoralY - bodyHeight * scale * 0.3}"
+                 rx="${finSize * scale * 0.6}" ry="${finSize * scale * 0.4}"
+                 fill="url(#${finGradId})"
+                 opacity="0.8"
+                 stroke="${colors.fins}"
+                 stroke-width="0.5"/>
+    `);
+    group.push(`
+        <ellipse cx="${pectoralX}" cy="${pectoralY + bodyHeight * scale * 0.3}"
+                 rx="${finSize * scale * 0.6}" ry="${finSize * scale * 0.4}"
+                 fill="url(#${finGradId})"
+                 opacity="0.8"
+                 stroke="${colors.fins}"
+                 stroke-width="0.5"/>
+    `);
 
-    // Плавники
-    group.push(`<ellipse cx="${centerX}" cy="${centerY - bodyHeight * scale * 0.5}" rx="${finSize * scale * 0.5}" ry="${finSize * scale}" fill="${colors.fins}"/>`);
-    group.push(`<ellipse cx="${centerX}" cy="${centerY + bodyHeight * scale * 0.5}" rx="${finSize * scale * 0.5}" ry="${finSize * scale}" fill="${colors.fins}"/>`);
+    // Анальный плавник (нижний)
+    const analX = centerX - bodyLength * scale * 0.15;
+    const analY = centerY + bodyHeight * scale * 0.45;
+    group.push(`
+        <path d="M ${analX} ${analY}
+                 Q ${analX - finSize * scale * 0.2} ${analY + finSize * scale * 0.6},
+                   ${analX + finSize * scale * 0.3} ${analY + finSize * scale * 0.4}
+                 L ${analX + finSize * scale * 0.4} ${analY}
+                 Z"
+              fill="url(#${finGradId})"
+              stroke="${colors.fins}"
+              stroke-width="1"/>
+    `);
 
     // Шипы для глубоководных
     if (isDeep && spikes > 0) {
         for (let i = 0; i < spikes; i++) {
-            const angle = (i / spikes) * Math.PI * 2;
-            const spikeX = centerX + Math.cos(angle) * bodyLength * scale * 0.5;
-            const spikeY = centerY + Math.sin(angle) * bodyHeight * scale * 0.5;
-            group.push(`<line x1="${centerX}" y1="${centerY}" x2="${spikeX}" y2="${spikeY}" stroke="${colors.accent}" stroke-width="2"/>`);
+            const spikePos = 0.3 + (i / spikes) * 0.4;
+            const spikeX = centerX - bodyLength * scale * 0.4 + bodyLength * scale * spikePos;
+            const spikeY = centerY - bodyHeight * scale * 0.45;
+            const spikeLength = (8 + (rng.next() * 7)) * scale;
+            group.push(`
+                <line x1="${spikeX}" y1="${spikeY}"
+                      x2="${spikeX}" y2="${spikeY - spikeLength}"
+                      stroke="${colors.accent}"
+                      stroke-width="2"
+                      stroke-linecap="round"/>
+            `);
         }
     }
 
-    svgParts.push(`<g filter="url(#${filterId})">${group.join('')}</g>`);
+    // Чешуя (текстура)
+    const scaleCount = Math.floor(bodyLength * 0.3);
+    for (let i = 0; i < scaleCount; i++) {
+        const scaleX = centerX - bodyLength * scale * 0.3 + (i * bodyLength * scale * 0.6 / scaleCount);
+        const scaleY = centerY + (rng.next() - 0.5) * bodyHeight * scale * 0.4;
+        group.push(`
+            <circle cx="${scaleX}" cy="${scaleY}" r="${scale * 2}"
+                    fill="none"
+                    stroke="${colors.accent}"
+                    stroke-width="0.5"
+                    opacity="0.3"/>
+        `);
+    }
 
-    // Глаза (поверх gooey эффекта)
+    svgParts.push(`<g>${group.join('')}</g>`);
+
+    // Глаз (поверх всего)
     const eyeX = centerX + bodyLength * scale * 0.35;
     const eyeY = centerY - bodyHeight * scale * 0.15;
     const eyeSize = asymmetricEyes ? [8 * scale, 12 * scale] : [10 * scale, 10 * scale];
 
-    svgParts.push(`<circle cx="${eyeX}" cy="${eyeY}" r="${eyeSize[0]}" fill="white"/>`);
+    svgParts.push(`<circle cx="${eyeX}" cy="${eyeY}" r="${eyeSize[0]}" fill="white" stroke="${colors.body}" stroke-width="1"/>`);
     svgParts.push(`<circle cx="${eyeX}" cy="${eyeY}" r="${eyeSize[0] * 0.6}" fill="${colors.eye}"/>`);
     svgParts.push(`<circle cx="${eyeX + eyeSize[0] * 0.2}" cy="${eyeY - eyeSize[0] * 0.2}" r="${eyeSize[0] * 0.3}" fill="white"/>`);
 
     if (asymmetricEyes) {
         const eyeY2 = centerY + bodyHeight * scale * 0.1;
-        svgParts.push(`<circle cx="${eyeX}" cy="${eyeY2}" r="${eyeSize[1]}" fill="white"/>`);
+        svgParts.push(`<circle cx="${eyeX}" cy="${eyeY2}" r="${eyeSize[1]}" fill="white" stroke="${colors.body}" stroke-width="1"/>`);
         svgParts.push(`<circle cx="${eyeX}" cy="${eyeY2}" r="${eyeSize[1] * 0.6}" fill="${colors.eye}"/>`);
     }
 
