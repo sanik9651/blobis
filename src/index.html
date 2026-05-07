@@ -39,13 +39,34 @@
             background: rgba(255, 255, 255, 0.02);
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .user-info {
+        .header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .user-name {
@@ -74,17 +95,143 @@
             letter-spacing: -1px;
         }
 
-        .coin-icon {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, #FFD700, #FFA500);
+        .header-icon-button {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1em;
-            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.4);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .header-icon-button:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, #1a1a1a, #0a0a0a);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #fcc100;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.5em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .settings-item {
+            margin-bottom: 20px;
+        }
+
+        .settings-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .settings-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 1em;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .settings-select:focus {
+            outline: none;
+            border-color: rgba(252, 193, 0, 0.5);
+        }
+
+        .coin-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             animation: coinFloat 3s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        .coin-icon svg {
+            display: block;
         }
 
         @keyframes coinFloat {
@@ -501,8 +648,16 @@
         }
 
         .nav-icon {
-            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 32px;
             transition: transform 0.2s;
+        }
+
+        .nav-icon svg,
+        .nav-icon img {
+            display: block;
         }
 
         .nav-item.active .nav-icon {
@@ -545,6 +700,46 @@
         .empty-state-text {
             font-size: 1em;
             font-weight: 500;
+        }
+
+        /* Sub-tabs */
+        .sub-tabs {
+            display: flex;
+            gap: 8px;
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .sub-tab-button {
+            flex: 1;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sub-tab-button.active {
+            background: linear-gradient(135deg, rgba(212, 113, 0, 0.2), rgba(252, 193, 0, 0.2));
+            border-color: rgba(252, 193, 0, 0.3);
+            color: #fcc100;
+        }
+
+        .sub-tab-button:active {
+            transform: scale(0.98);
+        }
+
+        .sub-tab-content {
+            display: none;
+        }
+
+        .sub-tab-content.active {
+            display: block;
         }
 
         /* Fishing Mini-Game */
@@ -1124,13 +1319,62 @@
 <body>
     <div class="app-container">
         <div class="header">
-            <div class="user-info">
+            <div class="header-left">
                 <div class="user-name" id="userName">Игрок</div>
-                <div class="level-badge">⭐ Уровень <span id="level">1</span></div>
+                <div class="balance">
+                    <div class="coin-icon">
+                        <svg width="36" height="36" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="coinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#d47100;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#fcc100;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <circle cx="12" cy="12" r="10.5" fill="#161616" stroke="url(#coinGradient)" stroke-width="2"/>
+                            <text x="12" y="12.5" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#e6e6e6" font-weight="bold" font-family="Arial, sans-serif">B</text>
+                        </svg>
+                    </div>
+                    <span id="coins">0</span>
+                </div>
             </div>
-            <div class="balance">
-                <div class="coin-icon">💰</div>
-                <span id="coins">0</span>
+            <div class="header-right">
+                <div class="level-badge">
+                    <svg width="24" height="24" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;margin-right:4px" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="levelGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#d47100;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#fcc100;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <rect x="2" y="6" width="20" height="12" rx="2" fill="none" stroke="url(#levelGradient)" stroke-width="1.5"/>
+                        <text x="12" y="15" text-anchor="middle" font-size="8" fill="url(#levelGradient)" font-weight="bold" font-family="Arial, sans-serif">LVL</text>
+                    </svg>
+                    Уровень <span id="level">1</span>
+                </div>
+                <button class="header-icon-button" onclick="openProfile()" title="Профиль">
+                    <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="profileGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#d47100;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#fcc100;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="12" cy="8" r="4" stroke="url(#profileGrad)" stroke-width="2" fill="none"/>
+                        <path d="M4 20c0-4 3-6 8-6s8 2 8 6" stroke="url(#profileGrad)" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <button class="header-icon-button" onclick="openSettings()" title="Настройки">
+                    <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="settingsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#d47100;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#fcc100;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="url(#settingsGrad)" stroke-width="2" fill="none"/>
+                        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" stroke="url(#settingsGrad)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
             </div>
         </div>
 
@@ -1141,7 +1385,7 @@
                     <div class="fish-counter">🐟 Поймано: <span id="totalFish">0</span></div>
 
                     <button class="fish-button" id="fishButton" onclick="goFishing()">
-                        🎣
+                        <img src="Icons/BlobisLogo.png" alt="Fishing" style="position:absolute;top:-10%;left:-10%;width:120%;height:120%;object-fit:cover;pointer-events:none;border-radius:50%">
                     </button>
 
                     <div class="loading" id="loading">
@@ -1175,26 +1419,47 @@
             <!-- Tasks Tab -->
             <div class="tab-content" id="tasksTab">
                 <div class="tasks-tab">
-                    <div class="task-card">
-                        <div class="task-info">
-                            <h3>Поймай 10 рыб</h3>
-                            <div class="task-reward">+500 💰</div>
-                        </div>
-                        <button class="task-button">Начать</button>
+                    <!-- Sub-tabs -->
+                    <div class="sub-tabs">
+                        <button class="sub-tab-button active" onclick="switchSubTab('tasks', 'daily')">Ежедневные</button>
+                        <button class="sub-tab-button" onclick="switchSubTab('tasks', 'career')">Карьерные</button>
+                        <button class="sub-tab-button" onclick="switchSubTab('tasks', 'referrals')">Рефералы</button>
                     </div>
-                    <div class="task-card">
-                        <div class="task-info">
-                            <h3>Поймай редкую рыбу</h3>
-                            <div class="task-reward">+1000 💰</div>
+
+                    <!-- Daily Sub-tab -->
+                    <div class="sub-tab-content active" id="tasks-daily" style="padding: 20px;">
+                        <div class="task-card">
+                            <div class="task-info">
+                                <h3>Поймай 10 рыб</h3>
+                                <div class="task-reward">+500 <svg width="16" height="16" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;margin-left:2px" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="coinGrad1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#d47100;stop-opacity:1"/><stop offset="100%" style="stop-color:#fcc100;stop-opacity:1"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="#161616" stroke="url(#coinGrad1)" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" font-size="11" fill="#e6e6e6" font-weight="bold" font-family="Arial, sans-serif">B</text></svg></div>
+                            </div>
+                            <button class="task-button">Начать</button>
                         </div>
-                        <button class="task-button">Начать</button>
+                        <div class="task-card">
+                            <div class="task-info">
+                                <h3>Поймай редкую рыбу</h3>
+                                <div class="task-reward">+1000 <svg width="16" height="16" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;margin-left:2px" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="coinGrad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#d47100;stop-opacity:1"/><stop offset="100%" style="stop-color:#fcc100;stop-opacity:1"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="#161616" stroke="url(#coinGrad2)" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" font-size="11" fill="#e6e6e6" font-weight="bold" font-family="Arial, sans-serif">B</text></svg></div>
+                            </div>
+                            <button class="task-button">Начать</button>
+                        </div>
                     </div>
-                    <div class="task-card">
-                        <div class="task-info">
-                            <h3>Достигни 5 уровня</h3>
-                            <div class="task-reward">+2000 💰</div>
+
+                    <!-- Career Sub-tab -->
+                    <div class="sub-tab-content" id="tasks-career" style="padding: 20px;">
+                        <div class="task-card">
+                            <div class="task-info">
+                                <h3>Достигни 5 уровня</h3>
+                                <div class="task-reward">+2000 <svg width="16" height="16" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;margin-left:2px" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="coinGrad3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#d47100;stop-opacity:1"/><stop offset="100%" style="stop-color:#fcc100;stop-opacity:1"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="#161616" stroke="url(#coinGrad3)" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" font-size="11" fill="#e6e6e6" font-weight="bold" font-family="Arial, sans-serif">B</text></svg></div>
+                            </div>
+                            <button class="task-button">Начать</button>
                         </div>
-                        <button class="task-button">Начать</button>
+                    </div>
+
+                    <!-- Referrals Sub-tab -->
+                    <div class="sub-tab-content" id="tasks-referrals" style="padding: 20px;">
+                        <div class="empty-state">
+                            <div class="empty-state-text">Пригласи друзей и получи награды!</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1202,9 +1467,44 @@
             <!-- Inventory Tab -->
             <div class="tab-content" id="inventoryTab">
                 <div class="inventory-tab">
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📦</div>
-                        <div class="empty-state-text">Инвентарь пуст</div>
+                    <!-- Sub-tabs -->
+                    <div class="sub-tabs">
+                        <button class="sub-tab-button active" onclick="switchSubTab('inventory', 'catch')">Улов</button>
+                        <button class="sub-tab-button" onclick="switchSubTab('inventory', 'rod')">Удочка</button>
+                    </div>
+
+                    <!-- Catch Sub-tab -->
+                    <div class="sub-tab-content active" id="inventory-catch">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <svg width="64" height="64" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <defs>
+                                        <linearGradient id="inventoryGradBig" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" style="stop-color:#d47100;stop-opacity:1" />
+                                            <stop offset="100%" style="stop-color:#fcc100;stop-opacity:1" />
+                                        </linearGradient>
+                                    </defs>
+                                    <!-- Рыбацкий ящик -->
+                                    <rect x="3" y="9" width="18" height="12" rx="1" stroke="url(#inventoryGradBig)" stroke-width="2" fill="none"/>
+                                    <path d="M3 14h18M3 18h18" stroke="url(#inventoryGradBig)" stroke-width="2"/>
+                                    <path d="M8 14v7M16 14v7" stroke="url(#inventoryGradBig)" stroke-width="2"/>
+                                    <!-- Крышка -->
+                                    <rect x="3" y="5" width="18" height="4" rx="1" stroke="url(#inventoryGradBig)" stroke-width="2" fill="none"/>
+                                    <circle cx="12" cy="7" r="1" fill="url(#inventoryGradBig)"/>
+                                </svg>
+                            </div>
+                            <div class="empty-state-text">Инвентарь пуст</div>
+                        </div>
+                    </div>
+
+                    <!-- Rod Sub-tab -->
+                    <div class="sub-tab-content" id="inventory-rod">
+                        <div style="padding: 20px;">
+                            <h3 style="color: #fcc100; margin-bottom: 16px; font-size: 1.1em;">Конструктор удочки</h3>
+                            <div class="empty-state">
+                                <div class="empty-state-text">Функционал в разработке</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1213,7 +1513,21 @@
             <div class="tab-content" id="marketTab">
                 <div class="market-tab">
                     <div class="empty-state">
-                        <div class="empty-state-icon">🏪</div>
+                        <div class="empty-state-icon">
+                            <svg width="64" height="64" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <linearGradient id="marketGradBig" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#d47100;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#fcc100;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <!-- Молоток аукциониста -->
+                                <path d="M14 4l-2 2m0 0l-4 4m4-4l4 4" stroke="url(#marketGradBig)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <rect x="16" y="2" width="4" height="8" rx="1" transform="rotate(45 18 6)" stroke="url(#marketGradBig)" stroke-width="2" fill="none"/>
+                                <path d="M3 21l4-4m0 0l4-4m-4 4l-4-4" stroke="url(#marketGradBig)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                <rect x="2" y="19" width="8" height="3" rx="1" stroke="url(#marketGradBig)" stroke-width="2" fill="none"/>
+                            </svg>
+                        </div>
                         <div class="empty-state-text">Рынок в разработке</div>
                     </div>
                 </div>
@@ -1222,28 +1536,41 @@
             <!-- Shop Tab -->
             <div class="tab-content" id="shopTab">
                 <div class="shop-tab">
-                    <div class="shop-item">
-                        <h3>🎣 Улучшенная удочка</h3>
-                        <p>Увеличивает шанс поймать редкую рыбу</p>
-                        <div class="shop-footer">
-                            <div class="shop-price">1000 💰</div>
-                            <button class="buy-button">Купить</button>
+                    <!-- Sub-tabs -->
+                    <div class="sub-tabs">
+                        <button class="sub-tab-button active" onclick="switchSubTab('shop', 'bait')">Приманка</button>
+                        <button class="sub-tab-button" onclick="switchSubTab('shop', 'rods')">Удочки</button>
+                    </div>
+
+                    <!-- Bait Sub-tab -->
+                    <div class="sub-tab-content active" id="shop-bait" style="padding: 20px;">
+                        <div class="shop-item">
+                            <h3>⚡ Энергетический напиток</h3>
+                            <p>Убирает задержку между ловлей на 1 час</p>
+                            <div class="shop-footer">
+                                <div class="shop-price">500 <svg width="16" height="16" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;margin-left:2px" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="coinGrad6" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#d47100;stop-opacity:1"/><stop offset="100%" style="stop-color:#fcc100;stop-opacity:1"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="#161616" stroke="url(#coinGrad6)" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" font-size="11" fill="#e6e6e6" font-weight="bold" font-family="Arial, sans-serif">B</text></svg></div>
+                                <button class="buy-button">Купить</button>
+                            </div>
                         </div>
                     </div>
-                    <div class="shop-item">
-                        <h3>🪝 Золотой крючок</h3>
-                        <p>Удваивает ценность пойманной рыбы</p>
-                        <div class="shop-footer">
-                            <div class="shop-price">5000 💰</div>
-                            <button class="buy-button">Купить</button>
+
+                    <!-- Rods Sub-tab -->
+                    <div class="sub-tab-content" id="shop-rods" style="padding: 20px;">
+                        <div class="shop-item">
+                            <h3>🎣 Улучшенная удочка</h3>
+                            <p>Увеличивает шанс поймать редкую рыбу</p>
+                            <div class="shop-footer">
+                                <div class="shop-price">1000 <svg width="16" height="16" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;margin-left:2px" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="coinGrad4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#d47100;stop-opacity:1"/><stop offset="100%" style="stop-color:#fcc100;stop-opacity:1"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="#161616" stroke="url(#coinGrad4)" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" font-size="11" fill="#e6e6e6" font-weight="bold" font-family="Arial, sans-serif">B</text></svg></div>
+                                <button class="buy-button">Купить</button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="shop-item">
-                        <h3>⚡ Энергетический напиток</h3>
-                        <p>Убирает задержку между ловлей на 1 час</p>
-                        <div class="shop-footer">
-                            <div class="shop-price">500 💰</div>
-                            <button class="buy-button">Купить</button>
+                        <div class="shop-item">
+                            <h3>🪝 Золотой крючок</h3>
+                            <p>Удваивает ценность пойманной рыбы</p>
+                            <div class="shop-footer">
+                                <div class="shop-price">5000 <svg width="16" height="16" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;margin-left:2px" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="coinGrad5" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#d47100;stop-opacity:1"/><stop offset="100%" style="stop-color:#fcc100;stop-opacity:1"/></linearGradient></defs><circle cx="12" cy="12" r="10" fill="#161616" stroke="url(#coinGrad5)" stroke-width="1.5"/><text x="12" y="16" text-anchor="middle" font-size="11" fill="#e6e6e6" font-weight="bold" font-family="Arial, sans-serif">B</text></svg></div>
+                                <button class="buy-button">Купить</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1254,23 +1581,95 @@
 
         <nav class="bottom-nav">
             <button class="nav-item active" onclick="switchTab('fishing')">
-                <div class="nav-icon">🎣</div>
+                <div class="nav-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" style="display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="fishingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#d47100;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#fcc100;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Удочка -->
+                        <line x1="3" y1="21" x2="15" y2="3" stroke="url(#fishingGrad)" stroke-width="2.5" stroke-linecap="round"/>
+                        <circle cx="15" cy="3" r="1.5" fill="url(#fishingGrad)"/>
+                        <!-- Катушка -->
+                        <circle cx="7" cy="15" r="2" fill="none" stroke="url(#fishingGrad)" stroke-width="1.5"/>
+                        <line x1="7" y1="13" x2="7" y2="17" stroke="url(#fishingGrad)" stroke-width="1"/>
+                        <!-- Леска с крючком -->
+                        <path d="M 15 3 Q 18 8 19 12" stroke="url(#fishingGrad)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-dasharray="1,2"/>
+                        <path d="M 19 12 L 19 15 Q 19 16.5 17.5 16.5 Q 16.5 16.5 16.5 15.5" stroke="url(#fishingGrad)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                    </svg>
+                </div>
                 <div class="nav-label">Рыбалка</div>
             </button>
             <button class="nav-item" onclick="switchTab('tasks')">
-                <div class="nav-icon">📋</div>
+                <div class="nav-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" style="display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="missionsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#d47100;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#fcc100;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M14 3v4a1 1 0 001 1h4" stroke="url(#missionsGrad)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z" stroke="url(#missionsGrad)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 12.5l2 2 4-4" stroke="url(#missionsGrad)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
                 <div class="nav-label">Задания</div>
             </button>
             <button class="nav-item" onclick="switchTab('inventory')">
-                <div class="nav-icon">📦</div>
+                <div class="nav-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" style="display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="inventoryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#d47100;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#fcc100;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Рыбацкий ящик -->
+                        <rect x="3" y="9" width="18" height="12" rx="1" stroke="url(#inventoryGrad)" stroke-width="2" fill="none"/>
+                        <path d="M3 14h18M3 18h18" stroke="url(#inventoryGrad)" stroke-width="2"/>
+                        <path d="M8 14v7M16 14v7" stroke="url(#inventoryGrad)" stroke-width="2"/>
+                        <!-- Крышка -->
+                        <rect x="3" y="5" width="18" height="4" rx="1" stroke="url(#inventoryGrad)" stroke-width="2" fill="none"/>
+                        <circle cx="12" cy="7" r="1" fill="url(#inventoryGrad)"/>
+                    </svg>
+                </div>
                 <div class="nav-label">Инвентарь</div>
             </button>
             <button class="nav-item" onclick="switchTab('market')">
-                <div class="nav-icon">🏪</div>
+                <div class="nav-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" style="display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="auctionGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#d47100;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#fcc100;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Молоток аукциониста -->
+                        <path d="M14 4l-2 2m0 0l-4 4m4-4l4 4" stroke="url(#auctionGrad)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="16" y="2" width="4" height="8" rx="1" transform="rotate(45 18 6)" stroke="url(#auctionGrad)" stroke-width="2" fill="none"/>
+                        <path d="M3 21l4-4m0 0l4-4m-4 4l-4-4" stroke="url(#auctionGrad)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <rect x="2" y="19" width="8" height="3" rx="1" stroke="url(#auctionGrad)" stroke-width="2" fill="none"/>
+                    </svg>
+                </div>
                 <div class="nav-label">Рынок</div>
             </button>
             <button class="nav-item" onclick="switchTab('shop')">
-                <div class="nav-icon">🛒</div>
+                <div class="nav-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" style="display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="shopGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#d47100;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#fcc100;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="9" cy="21" r="1" fill="url(#shopGrad)"/>
+                        <circle cx="20" cy="21" r="1" fill="url(#shopGrad)"/>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6" stroke="url(#shopGrad)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
                 <div class="nav-label">Магазин</div>
             </button>
         </nav>
@@ -1314,8 +1713,7 @@
                 </div>
 
                 <button class="reel-button" id="reelButton">
-                    🎣
-                    <div class="reel-text">ДЕРЖИ</div>
+                    <img src="Icons/BlobisLogo.png" alt="Fishing" style="position:absolute;top:-10%;left:-10%;width:120%;height:120%;object-fit:cover;pointer-events:none;border-radius:50%">
                 </button>
             </div>
         </div>
@@ -1336,6 +1734,140 @@
 
         const API_URL = window.location.origin;
         let userId = null;
+
+        // Translations
+        const translations = {
+            ru: {
+                player: 'Игрок',
+                level: 'Уровень',
+                caught: 'Поймано',
+                fishing: 'Рыбалка',
+                tasks: 'Задания',
+                inventory: 'Инвентарь',
+                market: 'Рынок',
+                shop: 'Магазин',
+                profile: 'Профиль',
+                settings: 'Настройки',
+                catch: 'Улов',
+                rod: 'Удочка',
+                bait: 'Приманка',
+                rods: 'Удочки',
+                daily: 'Ежедневные',
+                career: 'Карьерные',
+                referrals: 'Рефералы',
+                inventoryEmpty: 'Инвентарь пуст',
+                inDevelopment: 'Функционал в разработке',
+                rodConstructor: 'Конструктор удочки',
+                marketInDev: 'Рынок в разработке',
+                inviteFriends: 'Пригласи друзей и получи награды!',
+                caughtFish: 'Поймано рыбы:',
+                coins: 'Монет:',
+                language: 'Язык / Language'
+            },
+            en: {
+                player: 'Player',
+                level: 'Level',
+                caught: 'Caught',
+                fishing: 'Fishing',
+                tasks: 'Tasks',
+                inventory: 'Inventory',
+                market: 'Market',
+                shop: 'Shop',
+                profile: 'Profile',
+                settings: 'Settings',
+                catch: 'Catch',
+                rod: 'Rod',
+                bait: 'Bait',
+                rods: 'Rods',
+                daily: 'Daily',
+                career: 'Career',
+                referrals: 'Referrals',
+                inventoryEmpty: 'Inventory is empty',
+                inDevelopment: 'Feature in development',
+                rodConstructor: 'Rod Constructor',
+                marketInDev: 'Market in development',
+                inviteFriends: 'Invite friends and get rewards!',
+                caughtFish: 'Fish caught:',
+                coins: 'Coins:',
+                language: 'Language / Язык'
+            }
+        };
+
+        function applyLanguage(lang) {
+            const t = translations[lang];
+
+            // Header
+            document.getElementById('userName').textContent = t.player;
+            document.querySelectorAll('.level-badge').forEach(el => {
+                const levelNum = el.querySelector('#level, #profileLevel')?.textContent || '1';
+                if (el.id === 'profileLevel') return;
+                el.childNodes[2].textContent = ` ${t.level} `;
+            });
+
+            // Navigation
+            document.querySelectorAll('.nav-label').forEach((el, i) => {
+                const labels = [t.fishing, t.tasks, t.inventory, t.market, t.shop];
+                el.textContent = labels[i];
+            });
+
+            // Sub-tabs
+            document.querySelectorAll('.sub-tab-button').forEach(btn => {
+                const text = btn.textContent.trim();
+                if (text === 'Улов' || text === 'Catch') btn.textContent = t.catch;
+                if (text === 'Удочка' || text === 'Rod') btn.textContent = t.rod;
+                if (text === 'Приманка' || text === 'Bait') btn.textContent = t.bait;
+                if (text === 'Удочки' || text === 'Rods') btn.textContent = t.rods;
+                if (text === 'Ежедневные' || text === 'Daily') btn.textContent = t.daily;
+                if (text === 'Карьерные' || text === 'Career') btn.textContent = t.career;
+                if (text === 'Рефералы' || text === 'Referrals') btn.textContent = t.referrals;
+            });
+
+            // Empty states
+            document.querySelectorAll('.empty-state-text').forEach(el => {
+                const text = el.textContent.trim();
+                if (text.includes('Инвентарь пуст') || text.includes('Inventory is empty')) {
+                    el.textContent = t.inventoryEmpty;
+                }
+                if (text.includes('Рынок в разработке') || text.includes('Market in development')) {
+                    el.textContent = t.marketInDev;
+                }
+                if (text.includes('Пригласи друзей') || text.includes('Invite friends')) {
+                    el.textContent = t.inviteFriends;
+                }
+                if (text.includes('Функционал в разработке') || text.includes('Feature in development')) {
+                    el.textContent = t.inDevelopment;
+                }
+            });
+
+            // Modals
+            document.querySelectorAll('.modal-title').forEach(el => {
+                const text = el.textContent.trim();
+                if (text === 'Профиль' || text === 'Profile') el.textContent = t.profile;
+                if (text === 'Настройки' || text === 'Settings') el.textContent = t.settings;
+            });
+
+            // Profile modal
+            document.getElementById('profileName').textContent = t.player;
+            const profileStats = document.querySelectorAll('#profileModal .modal-body span');
+            profileStats.forEach(el => {
+                if (el.textContent.includes('Поймано') || el.textContent.includes('caught')) {
+                    el.textContent = t.caughtFish;
+                }
+                if (el.textContent.includes('Монет') || el.textContent.includes('Coins')) {
+                    el.textContent = t.coins;
+                }
+            });
+
+            // Settings
+            document.querySelector('.settings-label').textContent = t.language;
+
+            // Other texts
+            const rodConstructorTitle = document.querySelector('#inventory-rod h3');
+            if (rodConstructorTitle) {
+                rodConstructorTitle.textContent = t.rodConstructor;
+            }
+        }
+
         let userData = null;
         let currentTab = 'fishing';
 
@@ -1471,6 +2003,30 @@
             event.currentTarget.classList.add('active');
 
             currentTab = tabName;
+
+            // Вибрация при переключении
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        function switchSubTab(parentTab, subTabName) {
+            // Убираем активный класс со всех кнопок подвкладок родительской вкладки
+            const parentElement = document.getElementById(parentTab === 'tasks' ? 'tasksTab' : parentTab === 'inventory' ? 'inventoryTab' : 'shopTab');
+            parentElement.querySelectorAll('.sub-tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Скрываем все подвкладки родительской вкладки
+            parentElement.querySelectorAll('.sub-tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Активируем выбранную кнопку подвкладки
+            event.currentTarget.classList.add('active');
+
+            // Показываем выбранную подвкладку
+            document.getElementById(`${parentTab}-${subTabName}`).classList.add('active');
 
             // Вибрация при переключении
             if (tg.HapticFeedback) {
@@ -1913,7 +2469,95 @@
                     tg.showAlert('Система заданий в разработке!');
                 });
             });
+
+            // Load saved language
+            const savedLang = localStorage.getItem('language') || 'ru';
+            document.getElementById('languageSelect').value = savedLang;
+            applyLanguage(savedLang);
         });
+
+        function openProfile() {
+            document.getElementById('profileModal').classList.add('active');
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        function closeProfile() {
+            document.getElementById('profileModal').classList.remove('active');
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        function changeLanguage(lang) {
+            localStorage.setItem('language', lang);
+            applyLanguage(lang);
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        }
     </script>
+
+    <!-- Profile Modal -->
+    <div class="modal-overlay" id="profileModal" onclick="if(event.target === this) closeProfile()">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Профиль</div>
+                <button class="modal-close" onclick="closeProfile()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 3em; margin-bottom: 16px;">👤</div>
+                    <div style="font-size: 1.2em; font-weight: 600; margin-bottom: 8px;" id="profileName">Игрок</div>
+                    <div style="color: rgba(255, 255, 255, 0.6); margin-bottom: 20px;">Уровень <span id="profileLevel">1</span></div>
+                    <div style="background: rgba(255, 255, 255, 0.04); padding: 16px; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <span style="color: rgba(255, 255, 255, 0.6);">Поймано рыбы:</span>
+                            <span style="font-weight: 600;" id="profileFish">0</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: rgba(255, 255, 255, 0.6);">Монет:</span>
+                            <span style="font-weight: 600; color: #FFD700;" id="profileCoins">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal" onclick="if(event.target === this) closeSettings()">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Настройки</div>
+                <button class="modal-close" onclick="closeSettings()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-item">
+                    <label class="settings-label">Язык / Language</label>
+                    <select class="settings-select" id="languageSelect" onchange="changeLanguage(this.value)">
+                        <option value="ru">Русский</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
