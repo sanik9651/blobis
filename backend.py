@@ -49,15 +49,14 @@ app = FastAPI(
 )
 
 # Монтируем статические файлы для Web App
-# Убедитесь, что папка `src` существует и содержит `index.html` и другие статические ресурсы.
-# На Render.com путь должен быть корректным относительно корня проекта.
+# Vite build создает dist/ директорию
 import os
-static_dir = os.path.join(os.path.dirname(__file__), "src")
+static_dir = os.path.join(os.path.dirname(__file__), "dist")
 if os.path.exists(static_dir):
     app.mount("/webapp", StaticFiles(directory=static_dir, html=True), name="webapp")
     logger.info(f"Static files mounted from {static_dir}")
 else:
-    logger.error(f"Static directory not found: {static_dir}")
+    logger.warning(f"Static directory not found: {static_dir}. Run 'npm run build' first.")
 
 # Dependency
 def get_db():

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Blobis Exchange - Crypto Trading Simulator</title>
+
+    <!-- Telegram WebApp -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Babel Standalone for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        #root {
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- Import hooks -->
+    <script type="text/babel" src="./hooks/useMarket.js"></script>
+    <script type="text/babel" src="./hooks/useMining.js"></script>
+
+    <!-- Import components -->
+    <script type="text/babel" src="./components/CandlestickChart.jsx"></script>
+    <script type="text/babel" src="./components/OrderBook.jsx"></script>
+    <script type="text/babel" src="./components/TradeHistory.jsx"></script>
+    <script type="text/babel" src="./components/TradingPanel.jsx"></script>
+    <script type="text/babel" src="./components/MiningInterface.jsx"></script>
+    <script type="text/babel" src="./components/TradingTerminal.jsx"></script>
+
+    <!-- Main App -->
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+            const [isLoading, setIsLoading] = useState(true);
+
+            useEffect(() => {
+                // Initialize Telegram WebApp
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.ready();
+                    window.Telegram.WebApp.expand();
+                    window.Telegram.WebApp.enableClosingConfirmation();
+                }
+
+                setIsLoading(false);
+            }, []);
+
+            if (isLoading) {
+                return (
+                    <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="text-6xl mb-4">⛏️</div>
+                            <div className="text-2xl font-bold text-white">Loading Blobis Exchange...</div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return <TradingTerminal />;
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

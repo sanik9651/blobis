@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Blobis - Рыбалка</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 600px;
+            margin: 0 auto;
+            background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+        }
+
+        .header {
+            padding: 20px 20px 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .user-name {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .level-badge {
+            background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .balance {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 2em;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .coin-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 80px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Fishing Tab */
+        .fishing-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .fish-counter {
+            font-size: 1.1em;
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .fish-button {
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 6em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fish-button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .fish-button:hover::before {
+            opacity: 1;
+        }
+
+        .fish-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+        }
+
+        .fish-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #ffffff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: none;
+            max-width: 320px;
+        }
+
+        .result.show {
+            display: block;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fish-name {
+            font-size: 1.4em;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .fish-rarity {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .fish-stats {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .fish-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .fish-stat:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.9em;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        /* Tasks Tab */
+        .tasks-tab {
+            padding: 20px;
+        }
+
+        .task-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-info h3 {
+            font-size: 1.1em;
+            margin-bottom: 6px;
+        }
+
+        .task-reward {
+            color: #ffd700;
+            font-size: 0.9em;
+        }
+
+        .task-button {
+            background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .task-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Inventory Tab */
+        .inventory-tab {
+            padding: 20px;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .inventory-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .item-icon {
+            font-size: 3em;
+            margin-bottom: 8px;
+        }
+
+        .item-name {
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+
+        .item-count {
+            color: #888;
+            font-size: 0.85em;
+        }
+
+        /* Market Tab */
+        .market-tab {
+            padding: 20px;
+        }
+
+        .market-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-details h3 {
+            font-size: 1.1em;
+            margin-bottom: 6px;
+        }
+
+        .item-price {
+            color: #ffd700;
+            font-size: 0.9em;
+        }
+
+        /* Shop Tab */
+        .shop-tab {
+            padding: 20px;
+        }
+
+        .shop-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .shop-item h3 {
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+
+        .shop-item p {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 12px;
+        }
+
+        .shop-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .shop-price {
+            color: #ffd700;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .buy-button {
+            background: linear-gradient(135deg, #ffffff, #e0e0e0);
+            color: #000000;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .buy-button:active {
+            transform: scale(0.95);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: none;
+            color: #666;
+        }
+
+        .nav-item.active {
+            color: #ffffff;
+        }
+
+        .nav-icon {
+            font-size: 1.5em;
+        }
+
+        .nav-label {
+            font-size: 0.7em;
+            font-weight: 500;
+        }
+
+        .error {
+            background: rgba(255, 59, 48, 0.15);
+            border: 1px solid rgba(255, 59, 48, 0.3);
+            padding: 16px;
+            border-radius: 12px;
+            margin: 20px;
+            display: none;
+            color: #ff3b30;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 1.1em;
+        }
+
+        /* Fishing Mini-Game */
+        .fishing-game-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, #0a4a6e 0%, #063d5a 50%, #041f2e 100%);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .fishing-game-overlay.active {
+            display: flex;
+        }
+
+        .fishing-game-overlay.shake {
+            animation: gameShake 0.3s ease-in-out infinite;
+        }
+
+        @keyframes gameShake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .game-fish-name {
+            font-size: 2em;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-instruction {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
+        }
+
+        .progress-container {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 30px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ffed4e);
+            transition: width 0.1s linear;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .tension-container {
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 40px;
+        }
+
+        .tension-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .tension-status {
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .tension-status.weak {
+            color: #9ca3af;
+        }
+
+        .tension-status.good {
+            color: #10b981;
+        }
+
+        .tension-status.critical {
+            color: #ef4444;
+            animation: pulse 0.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .tension-bar {
+            width: 100%;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .tension-zones {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+        }
+
+        .zone-weak {
+            width: 60%;
+            background: rgba(156, 163, 175, 0.2);
+        }
+
+        .zone-good {
+            width: 25%;
+            background: rgba(16, 185, 129, 0.2);
+        }
+
+        .zone-critical {
+            width: 15%;
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .tension-fill {
+            height: 100%;
+            transition: width 0.05s linear, background 0.2s;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tension-fill.weak {
+            background: linear-gradient(90deg, #6b7280, #9ca3af);
+        }
+
+        .tension-fill.good {
+            background: linear-gradient(90deg, #059669, #10b981);
+        }
+
+        .tension-fill.critical {
+            background: linear-gradient(90deg, #dc2626, #ef4444);
+        }
+
+        .tension-markers {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+            font-size: 0.75em;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .reel-button {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffffff, #e5e7eb);
+            border: 4px solid rgba(255, 255, 255, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        .reel-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .reel-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .reel-text {
+            font-size: 0.3em;
+            font-weight: 700;
+            color: #1f2937;
+            margin-top: 8px;
+        }
+
+        .game-result {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px;
+            border-radius: 24px;
+            text-align: center;
+            z-index: 1001;
+            display: none;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .game-result.show {
+            display: block;
+            animation: resultPopup 0.4s ease;
+        }
+
+        @keyframes resultPopup {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .result-icon {
+            font-size: 4em;
+            margin-bottom: 16px;
+        }
+
+        .result-title {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        .result-message {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <div class="user-info">
+                <div class="user-name" id="userName">Игрок</div>
+                <div class="level-badge">⭐ Уровень <span id="level">1</span></div>
+            </div>
+            <div class="balance">
+                <div class="coin-icon">💰</div>
+                <span id="coins">0</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Fishing Tab -->
+            <div class="tab-content active" id="fishingTab">
+                <div class="fishing-tab">
+                    <div class="fish-counter">🐟 Поймано: <span id="totalFish">0</span></div>
+
+                    <button class="fish-button" id="fishButton" onclick="goFishing()">
+                        🎣
+                    </button>
+
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p>Ловим рыбу...</p>
+                    </div>
+
+                    <div class="result" id="result">
+                        <div style="text-align: center;">
+                            <div class="fish-name" id="fishName"></div>
+                            <div class="fish-rarity" id="fishRarity"></div>
+                        </div>
+                        <div class="fish-stats">
+                            <div class="fish-stat">
+                                <span class="stat-label">💎 Ценность</span>
+                                <span class="stat-value"><span id="fishValue"></span> монет</span>
+                            </div>
+                            <div class="fish-stat">
+                                <span class="stat-label">⚖️ Вес</span>
+                                <span class="stat-value"><span id="fishWeight"></span> кг</span>
+                            </div>
+                            <div class="fish-stat">
+                                <span class="stat-label">📏 Размер</span>
+                                <span class="stat-value"><span id="fishSize"></span> см</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tasks Tab -->
+            <div class="tab-content" id="tasksTab">
+                <div class="tasks-tab">
+                    <div class="task-card">
+                        <div class="task-info">
+                            <h3>Поймай 10 рыб</h3>
+                            <div class="task-reward">+500 💰</div>
+                        </div>
+                        <button class="task-button">Начать</button>
+                    </div>
+                    <div class="task-card">
+                        <div class="task-info">
+                            <h3>Поймай редкую рыбу</h3>
+                            <div class="task-reward">+1000 💰</div>
+                        </div>
+                        <button class="task-button">Начать</button>
+                    </div>
+                    <div class="task-card">
+                        <div class="task-info">
+                            <h3>Достигни 5 уровня</h3>
+                            <div class="task-reward">+2000 💰</div>
+                        </div>
+                        <button class="task-button">Начать</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Tab -->
+            <div class="tab-content" id="inventoryTab">
+                <div class="inventory-tab">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <div class="empty-state-text">Инвентарь пуст</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Market Tab -->
+            <div class="tab-content" id="marketTab">
+                <div class="market-tab">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🏪</div>
+                        <div class="empty-state-text">Рынок в разработке</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shop Tab -->
+            <div class="tab-content" id="shopTab">
+                <div class="shop-tab">
+                    <div class="shop-item">
+                        <h3>🎣 Улучшенная удочка</h3>
+                        <p>Увеличивает шанс поймать редкую рыбу</p>
+                        <div class="shop-footer">
+                            <div class="shop-price">1000 💰</div>
+                            <button class="buy-button">Купить</button>
+                        </div>
+                    </div>
+                    <div class="shop-item">
+                        <h3>🪝 Золотой крючок</h3>
+                        <p>Удваивает ценность пойманной рыбы</p>
+                        <div class="shop-footer">
+                            <div class="shop-price">5000 💰</div>
+                            <button class="buy-button">Купить</button>
+                        </div>
+                    </div>
+                    <div class="shop-item">
+                        <h3>⚡ Энергетический напиток</h3>
+                        <p>Убирает задержку между ловлей на 1 час</p>
+                        <div class="shop-footer">
+                            <div class="shop-price">500 💰</div>
+                            <button class="buy-button">Купить</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="error" id="error"></div>
+        </div>
+
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="switchTab('fishing')">
+                <div class="nav-icon">🎣</div>
+                <div class="nav-label">Рыбалка</div>
+            </button>
+            <button class="nav-item" onclick="switchTab('tasks')">
+                <div class="nav-icon">📋</div>
+                <div class="nav-label">Задания</div>
+            </button>
+            <button class="nav-item" onclick="switchTab('inventory')">
+                <div class="nav-icon">📦</div>
+                <div class="nav-label">Инвентарь</div>
+            </button>
+            <button class="nav-item" onclick="switchTab('market')">
+                <div class="nav-icon">🏪</div>
+                <div class="nav-label">Рынок</div>
+            </button>
+            <button class="nav-item" onclick="switchTab('shop')">
+                <div class="nav-icon">🛒</div>
+                <div class="nav-label">Магазин</div>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Fishing Mini-Game Overlay -->
+    <div class="fishing-game-overlay" id="fishingGame">
+        <div class="game-header">
+            <div class="game-fish-name" id="gameFishName">Рыба клюнула!</div>
+            <div class="game-instruction" id="gameInstruction">Удерживай натяжение в зеленой зоне!</div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-label">
+                <span>Прогресс вылова</span>
+                <span id="catchProgressText">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="catchProgressBar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="tension-container">
+            <div class="tension-label">
+                <span>Натяжение лески</span>
+                <span class="tension-status" id="tensionStatus">СЛАБО</span>
+            </div>
+            <div class="tension-bar">
+                <div class="tension-zones">
+                    <div class="zone-weak"></div>
+                    <div class="zone-good"></div>
+                    <div class="zone-critical"></div>
+                </div>
+                <div class="tension-fill weak" id="tensionBar" style="width: 0%"></div>
+            </div>
+            <div class="tension-markers">
+                <span>0</span>
+                <span>60</span>
+                <span>85</span>
+                <span>100</span>
+            </div>
+        </div>
+
+        <button class="reel-button" id="reelButton">
+            🎣
+            <div class="reel-text">ДЕРЖИ</div>
+        </button>
+    </div>
+
+    <!-- Game Result Modal -->
+    <div class="game-result" id="gameResult">
+        <div class="result-icon" id="resultIcon">🎉</div>
+        <div class="result-title" id="resultTitle">Поймана!</div>
+        <div class="result-message" id="resultMessage">Отличная работа!</div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.setHeaderColor('#0a0a0a');
+        tg.setBackgroundColor('#0a0a0a');
+
+        const API_URL = window.location.origin;
+        let userId = null;
+        let userData = null;
+        let currentTab = 'fishing';
+
+        // Fishing Mini-Game Variables
+        let gameActive = false;
+        let currentFish = null;
+        let tension = 0;
+        let catchProgress = 0;
+        let isHolding = false;
+        let lastUpdateTime = Date.now();
+        let lastJerkTime = Date.now();
+        let animationFrameId = null;
+        let lastHapticTime = 0;
+
+        // Fish configurations
+        const FISH_CONFIGS = {
+            common: {
+                resistance: 0.15,
+                jerkInterval: 2000,
+                jerkStrength: 15,
+                tensionIncreaseRate: 25,
+                tensionDecreaseRate: 20,
+                catchProgressRate: 15,
+            },
+            rare: {
+                resistance: 0.25,
+                jerkInterval: 1500,
+                jerkStrength: 20,
+                tensionIncreaseRate: 22,
+                tensionDecreaseRate: 25,
+                catchProgressRate: 12,
+            },
+            epic: {
+                resistance: 0.35,
+                jerkInterval: 1200,
+                jerkStrength: 25,
+                tensionIncreaseRate: 20,
+                tensionDecreaseRate: 30,
+                catchProgressRate: 10,
+            },
+            legendary: {
+                resistance: 0.45,
+                jerkInterval: 1000,
+                jerkStrength: 30,
+                tensionIncreaseRate: 18,
+                tensionDecreaseRate: 35,
+                catchProgressRate: 8,
+            },
+        };
+
+        // Получаем ID пользователя из Telegram
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            userId = tg.initDataUnsafe.user.id;
+            const username = tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.first_name || 'Игрок';
+            document.getElementById('userName').textContent = username;
+            loadUserData();
+        } else {
+            // Для тестирования без Telegram
+            userId = 123456789;
+            document.getElementById('userName').textContent = 'Тестовый игрок';
+            loadUserData();
+        }
+
+        async function loadUserData() {
+            try {
+                // Регистрируем или обновляем пользователя
+                const username = tg.initDataUnsafe?.user?.username || `user_${userId}`;
+                const registerResponse = await fetch(`${API_URL}/api/user/${userId}/update`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: username })
+                });
+
+                if (!registerResponse.ok) {
+                    throw new Error('Failed to register user');
+                }
+
+                // Загружаем данные пользователя
+                const response = await fetch(`${API_URL}/api/user/${userId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load user data');
+                }
+
+                userData = await response.json();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showError('Ошибка загрузки данных пользователя');
+            }
+        }
+
+        function updateStats() {
+            if (!userData) return;
+
+            document.getElementById('coins').textContent = Math.floor(userData.coins).toLocaleString();
+            document.getElementById('level').textContent = userData.level;
+            document.getElementById('totalFish').textContent = userData.total_fish_caught;
+        }
+
+        function switchTab(tabName) {
+            // Скрываем все вкладки
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Убираем активный класс со всех кнопок навигации
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Показываем выбранную вкладку
+            const tabMap = {
+                'fishing': 'fishingTab',
+                'tasks': 'tasksTab',
+                'inventory': 'inventoryTab',
+                'market': 'marketTab',
+                'shop': 'shopTab'
+            };
+
+            document.getElementById(tabMap[tabName]).classList.add('active');
+
+            // Активируем соответствующую кнопку навигации
+            event.currentTarget.classList.add('active');
+
+            currentTab = tabName;
+
+            // Вибрация при переключении
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        async function goFishing() {
+            const button = document.getElementById('fishButton');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const error = document.getElementById('error');
+
+            button.disabled = true;
+            loading.classList.add('show');
+            result.classList.remove('show');
+            error.classList.remove('show');
+
+            // Вибрация при нажатии
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/user/${userId}/fish`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fish');
+                }
+
+                const fish = await response.json();
+
+                // Запускаем мини-игру вместо сразу показа результата
+                loading.classList.remove('show');
+                startFishingGame(fish);
+
+            } catch (error) {
+                console.error('Error fishing:', error);
+                showError('Ошибка при ловле рыбы. Попробуйте снова.');
+
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.notificationOccurred('error');
+                }
+                loading.classList.remove('show');
+                button.disabled = false;
+            }
+        }
+
+        // Запуск мини-игры
+        function startFishingGame(fish) {
+            currentFish = fish;
+            gameActive = true;
+            tension = 0;
+            catchProgress = 0;
+            isHolding = false;
+            lastUpdateTime = Date.now();
+            lastJerkTime = Date.now();
+
+            // Показываем игровой оверлей
+            const gameOverlay = document.getElementById('fishingGame');
+            gameOverlay.classList.add('active');
+
+            // Устанавливаем название рыбы
+            document.getElementById('gameFishName').textContent = fish.name;
+            document.getElementById('gameInstruction').textContent = 'Удерживай натяжение в зеленой зоне!';
+
+            // Сбрасываем UI
+            updateGameUI();
+
+            // Запускаем игровой цикл
+            animationFrameId = requestAnimationFrame(gameLoop);
+
+            // Вибрация старта
+            triggerHaptic('medium');
+        }
+
+        // Игровой цикл
+        function gameLoop() {
+            if (!gameActive) return;
+
+            const now = Date.now();
+            const deltaTime = (now - lastUpdateTime) / 1000;
+            lastUpdateTime = now;
+
+            const config = FISH_CONFIGS[currentFish.rarity] || FISH_CONFIGS.common;
+
+            // Изменение натяжения
+            if (isHolding) {
+                tension += config.tensionIncreaseRate * deltaTime;
+            } else {
+                tension -= config.tensionDecreaseRate * deltaTime;
+            }
+
+            // Сопротивление рыбы
+            tension -= config.resistance * deltaTime * 100;
+
+            // Ограничиваем натяжение
+            tension = Math.max(0, Math.min(100, tension));
+
+            // Проверка на обрыв
+            if (tension >= 100) {
+                endGame(false);
+                return;
+            }
+
+            // Обновление прогресса
+            if (tension >= 60 && tension < 85) {
+                // Зеленая зона - прогресс растет
+                catchProgress += config.catchProgressRate * deltaTime;
+            } else if (tension < 60) {
+                // Белая зона - прогресс падает
+                catchProgress -= 5 * deltaTime;
+            }
+
+            catchProgress = Math.max(0, Math.min(100, catchProgress));
+
+            // Проверка на успех
+            if (catchProgress >= 100) {
+                endGame(true);
+                return;
+            }
+
+            // Рывки рыбы
+            if (now - lastJerkTime > config.jerkInterval) {
+                applyJerk(config);
+            }
+
+            // Тряска в красной зоне
+            const gameOverlay = document.getElementById('fishingGame');
+            if (tension >= 85 && tension < 95) {
+                gameOverlay.classList.add('shake');
+                if (Math.random() > 0.7) triggerHaptic('light');
+            } else {
+                gameOverlay.classList.remove('shake');
+            }
+
+            // Обновляем UI
+            updateGameUI();
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        // Применить рывок рыбы
+        function applyJerk(config) {
+            const jerkDirection = Math.random() > 0.5 ? 1 : -1;
+            const jerkAmount = config.jerkStrength * jerkDirection * (0.7 + Math.random() * 0.6);
+
+            tension = Math.max(0, Math.min(100, tension + jerkAmount));
+            lastJerkTime = Date.now();
+
+            triggerHaptic('medium');
+        }
+
+        // Обновление UI игры
+        function updateGameUI() {
+            // Прогресс вылова
+            document.getElementById('catchProgressBar').style.width = catchProgress + '%';
+            document.getElementById('catchProgressText').textContent = Math.floor(catchProgress) + '%';
+
+            // Натяжение
+            const tensionBar = document.getElementById('tensionBar');
+            tensionBar.style.width = tension + '%';
+
+            // Цвет и статус натяжения
+            const tensionStatus = document.getElementById('tensionStatus');
+            tensionBar.classList.remove('weak', 'good', 'critical');
+
+            if (tension >= 95) {
+                tensionStatus.textContent = 'ОБРЫВ!';
+                tensionStatus.className = 'tension-status critical';
+                tensionBar.classList.add('critical');
+            } else if (tension >= 85) {
+                tensionStatus.textContent = 'КРИТИЧНО!';
+                tensionStatus.className = 'tension-status critical';
+                tensionBar.classList.add('critical');
+            } else if (tension >= 60) {
+                tensionStatus.textContent = 'ОТЛИЧНО!';
+                tensionStatus.className = 'tension-status good';
+                tensionBar.classList.add('good');
+            } else {
+                tensionStatus.textContent = 'СЛАБО';
+                tensionStatus.className = 'tension-status weak';
+                tensionBar.classList.add('weak');
+            }
+        }
+
+        // Завершение игры
+        function endGame(success) {
+            gameActive = false;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+
+            const gameOverlay = document.getElementById('fishingGame');
+            gameOverlay.classList.remove('shake');
+
+            // Показываем результат
+            const resultModal = document.getElementById('gameResult');
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultMessage = document.getElementById('resultMessage');
+
+            if (success) {
+                resultIcon.textContent = '🎉';
+                resultTitle.textContent = 'Поймана!';
+                resultMessage.textContent = `${currentFish.name} добавлена в инвентарь!`;
+                triggerHaptic('heavy');
+
+                // Показываем результат на главном экране
+                setTimeout(() => {
+                    gameOverlay.classList.remove('active');
+                    resultModal.classList.remove('show');
+                    displayFish(currentFish);
+                    loadUserData();
+                    document.getElementById('fishButton').disabled = false;
+                }, 2000);
+            } else {
+                resultIcon.textContent = '💔';
+                resultTitle.textContent = 'Леска порвалась!';
+                resultMessage.textContent = 'Рыба ушла...';
+                triggerHaptic('heavy');
+
+                setTimeout(() => {
+                    gameOverlay.classList.remove('active');
+                    resultModal.classList.remove('show');
+                    document.getElementById('fishButton').disabled = false;
+                }, 2000);
+            }
+
+            resultModal.classList.add('show');
+        }
+
+        // Тактильная вибрация
+        function triggerHaptic(type = 'light') {
+            const now = Date.now();
+            if (now - lastHapticTime < 100) return;
+            lastHapticTime = now;
+
+            if (window.Telegram?.WebApp?.HapticFeedback) {
+                if (type === 'light') {
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+                } else if (type === 'medium') {
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+                } else if (type === 'heavy') {
+                    window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+                }
+            }
+        }
+
+        // Обработчики кнопки намотки
+        const reelButton = document.getElementById('reelButton');
+
+        reelButton.addEventListener('mousedown', () => {
+            if (gameActive) {
+                isHolding = true;
+                triggerHaptic('light');
+            }
+        });
+
+        reelButton.addEventListener('mouseup', () => {
+            isHolding = false;
+        });
+
+        reelButton.addEventListener('mouseleave', () => {
+            isHolding = false;
+        });
+
+        reelButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (gameActive) {
+                isHolding = true;
+                triggerHaptic('light');
+            }
+        });
+
+        reelButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isHolding = false;
+        });
+
+
+        function displayFish(fish) {
+            const result = document.getElementById('result');
+            const rarityColors = {
+                'common': '#4a4a4a',
+                'rare': '#3b82f6',
+                'epic': '#a855f7',
+                'legendary': '#f59e0b',
+                'mythical': '#ec4899'
+            };
+
+            const rarityNames = {
+                'common': 'Обычная',
+                'rare': 'Редкая',
+                'epic': 'Эпическая',
+                'legendary': 'Легендарная',
+                'mythical': 'Мифическая'
+            };
+
+            document.getElementById('fishName').textContent = fish.name;
+            document.getElementById('fishValue').textContent = fish.coin_value.toLocaleString();
+            document.getElementById('fishWeight').textContent = fish.weight?.toFixed(2) || '?';
+            document.getElementById('fishSize').textContent = fish.size?.toFixed(2) || '?';
+
+            const rarityElement = document.getElementById('fishRarity');
+            rarityElement.textContent = rarityNames[fish.rarity] || fish.rarity;
+            rarityElement.style.backgroundColor = rarityColors[fish.rarity] || '#4a4a4a';
+
+            result.classList.add('show');
+        }
+
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.classList.add('show');
+
+            setTimeout(() => {
+                error.classList.remove('show');
+            }, 5000);
+        }
+
+        // Обработчики для кнопок магазина
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.buy-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    if (tg.HapticFeedback) {
+                        tg.HapticFeedback.impactOccurred('light');
+                    }
+                    tg.showAlert('Покупки будут доступны в следующем обновлении!');
+                });
+            });
+
+            document.querySelectorAll('.task-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    if (tg.HapticFeedback) {
+                        tg.HapticFeedback.impactOccurred('light');
+                    }
+                    tg.showAlert('Система заданий в разработке!');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

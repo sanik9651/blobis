@@ -55,6 +55,11 @@ output/
 
 # Node modules
 node_modules/
+package-lock.json
+
+# Vite
+dist/
+.vite/
 
 # Claude
 .claude/

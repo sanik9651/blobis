@@ -1,6 +1,6 @@
-# 🎣 Blobis - Telegram Fishing Game
+# ⛏️ Blobis Exchange - DeFi Trading Simulator
 
-Blobis - это увлекательная игра-рыбалка в Telegram с элементами коллекционирования, аукционов и соревнований.
+Профессиональный симулятор криптовалютной биржи с реальной математикой AMM (Automated Market Maker) и системой майнинга. Проект демонстрирует работу DeFi-протоколов в игровой форме.
 
 ## 🎮 Особенности
 
@@ -16,194 +16,130 @@ Blobis - это увлекательная игра-рыбалка в Telegram �
 - **Система комбо** - Ловите рыбу подряд для бонусов
 - **Улучшения** - Прокачивайте скорость клёва, шанс критического улова и другое
 
-## 🏗️ Архитектура
+## 📦 Технологический стек
 
-Проект состоит из трёх основных компонентов:
-
-1. **Backend API** (FastAPI) - REST API для игровой логики
-2. **Telegram Bot** (python-telegram-bot) - Интерфейс для игроков
-3. **Frontend** (HTML/JavaScript) - Web-интерфейс для Telegram Web App (встроен в Backend)
+- **React 18** - UI framework
+- **Vite** - Build tool & dev server
+- **Tailwind CSS** - Styling
+- **Canvas API** - Графики OHLC
+- **localStorage** - Персистентность данных
+- **Telegram WebApp API** - Интеграция с Telegram
 
 ## 📋 Требования
 
-- Python 3.12+
-- pip
-- Telegram Bot Token (получите у [@BotFather](https://t.me/BotFather))
+- Node.js 18+
+- npm или yarn
 
-## 🚀 Деплой на Render.com (Бесплатно 24/7)
-
-Проект полностью настроен для работы на **Render.com**.
-
-1. **GitHub**: Убедитесь, что ваш код загружен в репозиторий [https://github.com/sanik9651/blobis](https://github.com/sanik9651/blobis).
-2. **Создание Web Service**:
-   - Зайдите в [Render Dashboard](https://dashboard.render.com/).
-   - Нажмите **New +** -> **Web Service**.
-   - Подключите ваш репозиторий `blobis`.
-   - Render автоматически подхватит настройки из файла `render.yaml`.
-3. **Настройка Переменных (Environment Variables)**:
-   В настройках сервиса на Render добавьте:
-   - `TELEGRAM_BOT_TOKEN`: Токен вашего бота от @BotFather.
-   - `WEBAPP_URL`: URL, который выдаст Render (например, `https://blobis-backend.onrender.com`).
-   - `DATABASE_URL`: Можно оставить пустым (будет использован SQLite) или подключить внешнюю PostgreSQL.
-
-## 🛠 Настройка Menu Button в Telegram
-
-Чтобы игра открывалась по нажатию кнопки в меню бота:
-
-1. Напишите [@BotFather](https://t.me/BotFather).
-2. Выберите вашего бота: `/mybots` -> `@YourBotName`.
-3. Перейдите в **Bot Settings** -> **Menu Button** -> **Configure menu button**.
-4. Отправьте ссылку на ваше приложение: `https://your-render-url.onrender.com/webapp`.
-5. Введите название кнопки: `🎮 Играть в Blobis`.
-
-## 🚀 Быстрый старт
-
-### 1. Установка зависимостей
+## 🛠️ Установка и запуск
 
 ```bash
-# Создайте виртуальное окружение
-python3 -m venv venv
+# Установить зависимости
+npm install
 
-# Активируйте его
-source venv/bin/activate  # Linux/Mac
-# или
-venv\Scripts\activate  # Windows
+# Запустить dev-сервер
+npm run dev
 
-# Установите зависимости
-pip install -r requirements.txt
+# Собрать для продакшена
+npm run build
+
+# Превью production build
+npm run preview
 ```
 
-### 2. Настройка
+Сервер запустится на http://localhost:3000
 
-Создайте файл `.env`:
+## 📁 Структура проекта
 
-```bash
-cp .env.example .env
+```
+src/
+├── hooks/
+│   ├── useMarket.js      # AMM движок, Order Book, свечи
+│   ├── useMining.js      # Система майнинга и апгрейдов
+│   └── useBalance.js     # Управление балансами BC/$BLOB
+├── components/
+│   ├── TradingTerminal.jsx    # Главный компонент
+│   ├── CandlestickChart.jsx   # OHLC график
+│   ├── OrderBook.jsx          # Стакан заявок
+│   ├── TradeHistory.jsx       # История сделок
+│   ├── TradingPanel.jsx       # Панель торговли
+│   └── MiningInterface.jsx    # Интерфейс майнинга
+├── main.jsx              # Entry point
+└── index.css             # Global styles
 ```
 
-Отредактируйте `.env` и укажите ваш Telegram Bot Token:
+## 🎮 Как играть
 
-```env
-TELEGRAM_BOT_TOKEN=your_bot_token_here
-DATABASE_URL=sqlite:///./blobis.db
+### 1. Mining (Майнинг)
+- Кликайте на кнопку **MINE** для получения Blobis Coins (BC)
+- Покупайте апгрейды для увеличения дохода:
+  - **Click Power** - больше BC за клик
+  - **CPU/GPU/ASIC** - пассивный доход
+  - **Mining Farm** - индустриальный масштаб
+  - **Quantum Miner** - максимальная эффективность
+
+### 2. Trading (Торговля)
+- Переключитесь на вкладку **Trading**
+- Используйте накопленные BC для покупки токенов $BLOB
+- Два типа ордеров:
+  - **Market** - мгновенное исполнение по текущей цене
+  - **Limit** - исполнение при достижении указанной цены
+
+### 3. Стратегия
+- Следите за графиком цены BC/$BLOB
+- Покупайте $BLOB на просадках
+- Продавайте на пиках
+- Учитывайте slippage при больших объемах
+- Комиссия 0.3% влияет на прибыльность
+
+## 🧮 Математика AMM
+
+### Формула постоянного продукта
+```
+x * y = k
+
+где:
+x = резерв BC в пуле
+y = резерв $BLOB в пуле
+k = константа (1,000,000 * 10,000 = 10,000,000,000)
 ```
 
-### 3. Запуск
- 
- Для запуска всех компонентов используйте `start_all.py`:
- ```bash
- ./venv/bin/python start_all.py
- ```
- 
- Backend будет доступен на `http://localhost:8000`, Web App на `http://localhost:8000/webapp`.
- 
- После запуска, откройте вашего бота в Telegram и отправьте команду `/start`\\.
- 
- **Настройка Web App Menu Button:**
- В @BotFather используйте команду `/setwebapp` для вашего бота, выберите его, затем вставьте URL вашего Web App (который выдаст Render, например, `https://your-app-name.onrender.com/webapp`). Задайте текст кнопки, например, "🎮 Играть в Blobis".
- 
- ## 📚 Документация
- 
- - [Дизайн-документ игры](GAME_DESIGN_DOCUMENT.md)
- - [API документация](http://localhost:8000/docs) (после запуска backend)
+### Расчет цены
+```
+Цена = poolBC / poolBLOB
+```
 
-## 🎯 Игровой процесс (через Telegram Web App)
- 
- 1. **Начните игру** - Откройте Web App через кнопку "Играть в Blobis" в меню бота или по команде `/start`.
- 2. **Рыбачьте** - В Web App нажимайте кнопку "🎣 Рыбачить", ждите поклевку и подсекайте.
- 3. **Прокачивайтесь** - Повышайте уровень, получайте монеты и открывайте новые локации.
- 4. **Управляйте инвентарем** - Просматривайте пойманную рыбу.
- 5. **Торгуйте на аукционе** - Выставляйте редкую рыбу на продажу или покупайте у других игроков.
- 6. **Выполняйте квесты** - Получайте ежедневные награды.
+### Расчет slippage при покупке
+```
+amountInAfterFee = amountIn * (1 - 0.003)
+newPoolBC = poolBC + amountInAfterFee
+newPoolBLOB = k / newPoolBC
+amountOut = poolBLOB - newPoolBLOB
+slippage = ((newPrice - currentPrice) / currentPrice) * 100
+```
 
-## 🗺️ Локации
- 
- | Локация | Уровень | Множитель | Биом |
- |---------|---------|-----------|------|
- | Речной берег | 1 | 1.0x | river |
- | Озеро у леса | 5 | 1.5x | lake |
- | Горная река | 10 | 2.0x | mountain |
- | Болотные топи | 15 | 2.5x | swamp |
- | Океанский берег | 20 | 3.0x | ocean |
- | Подводная пещера | 30 | 5.0x | cave |
+## 🔒 Безопасность
 
-## 🐟 Редкость рыб
+- Все данные хранятся локально в localStorage
+- Нет серверных запросов
+- Нет реальных денег
+- Чисто образовательный проект
 
-- **Common** (Обычная) - 60% шанс
-- **Rare** (Редкая) - 25% шанс
-- **Epic** (Эпическая) - 10% шанс
-- **Legendary** (Легендарная) - 4% шанс
-- **Mythical** (Мифическая) - 1% шанс
+## 🎯 Roadmap
 
-## 🛠️ Технологии
+- [x] AMM движок с формулой x*y=k
+- [x] Order Book система
+- [x] OHLC графики
+- [x] Mining система
+- [x] Trading Terminal UI
+- [ ] Firebase интеграция для мультиплеера
+- [ ] Технические индикаторы (RSI, MACD, MA)
+- [ ] Лидерборд
+- [ ] Достижения и квесты
 
-- **Backend**: FastAPI, SQLAlchemy, Uvicorn
-- **Bot**: python-telegram-bot
-- **Database**: SQLite (dev) / PostgreSQL (prod)
-- **AI**: Hugging Face (опционально)
-- **Frontend**: React, Vite
+## 📄 Лицензия
 
-## 📊 API Endpoints
-
-### Основные endpoints:
-
-- `GET /api/health` - Проверка здоровья сервера
-- `GET /api/user/{telegram_id}` - Информация о пользователе
-- `POST /api/fish/{telegram_id}/cast` - Начать рыбалку
-- `POST /api/fish/{telegram_id}/hook` - Поймать рыбу
-- `GET /api/fish/{telegram_id}/inventory` - Инвентарь
-- `GET /api/auction/active` - Активные аукционы
-- `GET /api/locations` - Список локаций
-- `GET /api/leaderboard` - Таблица лидеров
-
-Полная документация доступна на `/docs` после запуска backend.
-
-## 🧪 Тестирование (через API)
- 
- ```bash
- # Проверка здоровья API
- curl http://localhost:8000/api/health
- 
- # Получить или создать пользователя
- curl http://localhost:8000/api/user/123456789
- 
- # Начать рыбалку (для пользователя 123456789)
- curl -X POST http://localhost:8000/api/fish/123456789/cast
- 
- # Поймать рыбу (для пользователя 123456789)
- curl -X POST http://localhost:8000/api/fish/123456789/hook
- ```
- 
- **Тестирование Web App:**
- Откройте `http://localhost:8000/webapp` в браузере. Для полной функциональности используйте Web App внутри Telegram.
-
-## 🤝 Вклад в проект
-
-Мы приветствуем вклад в развитие проекта! Пожалуйста:
-
-1. Форкните репозиторий
-2. Создайте ветку для вашей функции (`git checkout -b feature/AmazingFeature`)
-3. Закоммитьте изменения (`git commit -m 'Add some AmazingFeature'`)
-4. Запушьте в ветку (`git push origin feature/AmazingFeature`)
-5. Откройте Pull Request
-
-## 📝 Лицензия
-
-Этот проект распространяется под лицензией MIT.
-
-## 👥 Авторы
-
-- Разработка и дизайн - Blobis Team
-
-## 🐛 Сообщить о проблеме
-
-Если вы нашли баг или у вас есть предложение, создайте [issue](https://github.com/yourusername/blobis/issues).
-
-## 📞 Контакты
- 
- - Telegram: [@Blobis_game_bot](https://t.me/Blobis_game_bot)
- - Email: support@blobis.game
+MIT License - используйте свободно для обучения и развлечения.
 
 ---
 
-**Приятной рыбалки! 🎣**
+**Powered by AMM • x*y=k Protocol**
