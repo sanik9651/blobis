@@ -57,8 +57,8 @@ output/
 node_modules/
 package-lock.json
 
-# Vite
-dist/
+# Vite - COMMENTED OUT to commit dist/ for Render
+# dist/
 .vite/
 
 # Claude
