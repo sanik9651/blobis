@@ -470,17 +470,27 @@ async def admin_add_coins(user_id: int, amount: float, db: Session = Depends(get
         'amount_added': amount
     }
 
-# Catch-all route для SPA - ДОЛЖЕН БЫТЬ ПОСЛЕДНИМ
-@app.get("/{full_path:path}")
-async def serve_spa(full_path: str):
-    """Serve SPA for all non-API routes"""
+# Root route - serve index.html
+@app.get("/")
+async def root():
+    """Serve main page"""
     if static_files_mounted:
         index_file = os.path.join(static_dir, "index.html")
         if os.path.exists(index_file):
             from fastapi.responses import FileResponse
             return FileResponse(index_file)
+    return {"detail": "Frontend not built"}
 
-    return {"detail": "Frontend not built. Run 'npm run build' first."}
+# Webapp route for Telegram
+@app.get("/webapp")
+async def webapp():
+    """Serve webapp for Telegram"""
+    if static_files_mounted:
+        index_file = os.path.join(static_dir, "index.html")
+        if os.path.exists(index_file):
+            from fastapi.responses import FileResponse
+            return FileResponse(index_file)
+    return {"detail": "Frontend not built"}
 
 # Если запускаем локально, то используем uvicorn
 if __name__ == "__main__":
