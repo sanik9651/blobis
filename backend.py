@@ -128,14 +128,10 @@ def get_db():
     finally:
         db.close()
 
-# Монтируем статические файлы для assets (JS, CSS)
-if static_files_mounted:
-    assets_dir = os.path.join(static_dir, "assets")
-    if os.path.exists(assets_dir):
-        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
-        logger.info(f"Assets mounted from {assets_dir}")
-    else:
-        logger.warning(f"Assets directory not found: {assets_dir}")
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint for monitoring"""
+    return {"status": "ok", "service": "blobis-api"}
 
 # Dependency
 def get_db():
@@ -144,11 +140,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
-@app.get("/api/health")
-async def health_check():
-    """Health check endpoint for monitoring"""
-    return {"status": "ok", "service": "blobis-api"}
 
 @app.post(WEBHOOK_PATH)
 async def bot_webhook(request: Request, background_tasks: BackgroundTasks):
@@ -491,6 +482,15 @@ async def webapp():
             from fastapi.responses import FileResponse
             return FileResponse(index_file)
     return {"detail": "Frontend not built"}
+
+# Монтируем статические файлы для assets (JS, CSS) - ПОСЛЕ всех роутов
+if static_files_mounted:
+    assets_dir = os.path.join(static_dir, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+        logger.info(f"Assets mounted from {assets_dir}")
+    else:
+        logger.warning(f"Assets directory not found: {assets_dir}")
 
 # Если запускаем локально, то используем uvicorn
 if __name__ == "__main__":
