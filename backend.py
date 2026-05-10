@@ -483,14 +483,16 @@ async def webapp():
             return FileResponse(index_file)
     return {"detail": "Frontend not built"}
 
-# Монтируем статические файлы для assets (JS, CSS) - ПОСЛЕ всех роутов
-if static_files_mounted:
-    assets_dir = os.path.join(static_dir, "assets")
-    if os.path.exists(assets_dir):
-        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
-        logger.info(f"Assets mounted from {assets_dir}")
-    else:
-        logger.warning(f"Assets directory not found: {assets_dir}")
+# Serve static assets
+@app.get("/assets/{file_path:path}")
+async def serve_assets(file_path: str):
+    """Serve static assets (JS, CSS, etc)"""
+    if static_files_mounted:
+        asset_file = os.path.join(static_dir, "assets", file_path)
+        if os.path.exists(asset_file):
+            from fastapi.responses import FileResponse
+            return FileResponse(asset_file)
+    raise HTTPException(status_code=404, detail="Asset not found")
 
 # Если запускаем локально, то используем uvicorn
 if __name__ == "__main__":
