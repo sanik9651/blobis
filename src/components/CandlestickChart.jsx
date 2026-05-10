@@ -49,7 +49,7 @@ const CandlestickChart = ({ candles, currentCandle, width = 800, height = 500 })
       // Draw candles
       allCandles.forEach((candle, index) => {
         const x = PADDING.left + index * candleSpacing + candleSpacing / 2;
-        drawCandle(ctx, candle, x, candleWidth, minPrice, priceRange, maxVolume, index === allCandles.length - 1 && currentCandle);
+        drawCandle(ctx, candle, x, candleWidth, minPrice, priceRange, maxVolume, index === allCandles.length - 1 && currentCandle, maxPrice);
       });
 
       // Draw price axis
@@ -75,7 +75,7 @@ const CandlestickChart = ({ candles, currentCandle, width = 800, height = 500 })
       }
     };
 
-    const drawCandle = (ctx, candle, x, candleWidth, minPrice, priceRange, maxVolume, isCurrent) => {
+    const drawCandle = (ctx, candle, x, candleWidth, minPrice, priceRange, maxVolume, isCurrent, maxPrice) => {
       const isGreen = candle.close >= candle.open;
       const color = isGreen ? '#10b981' : '#ef4444';
 

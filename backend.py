@@ -4,7 +4,8 @@ from fastapi import FastAPI, HTTPException, Depends, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timezone
+from contextlib import asynccontextmanager
 import uvicorn
 import asyncio
 import os
@@ -47,12 +48,52 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Lifespan context manager for startup/shutdown
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    from database import init_db, create_initial_locations, create_npc_fishermen
+    db = SessionLocal()
+    try:
+        init_db()
+        create_initial_locations(db)
+        create_npc_fishermen(db)
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+    finally:
+        db.close()
+
+    # Initialize global market pool
+    try:
+        market_service.initialize_global_pool()
+        logger.info("Global market pool initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize market pool: {e}")
+
+    # Setup bot
+    telegram_bot.setup_bot()
+    if TELEGRAM_BOT_TOKEN:
+        try:
+            await telegram_bot.start_webhook_bot()
+        except Exception as e:
+            logger.error(f"Failed to start webhook bot: {e}")
+            logger.warning("Bot will continue without webhook. You can set it up manually later.")
+    else:
+        logger.error("TELEGRAM_BOT_TOKEN не найден. Бот не будет запущен.")
+
+    yield
+
+    # Shutdown
+    logger.info("Приложение завершает работу.")
+
 # Инициализация FastAPI приложения
 app = FastAPI(
     title="Blobis API",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Монтируем статические файлы для Web App
@@ -142,6 +183,19 @@ def get_user_data(user_id: int, db: Session = Depends(get_db)):
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
+
+@app.get("/api/user/{user_id}/balance")
+def get_user_balance(user_id: int, db: Session = Depends(get_db)):
+    """Get user's BC and BLOB balances"""
+    db_user = crud.get_user(db, user_id=user_id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "user_id": user_id,
+        "balance_bc": db_user.coins,
+        "balance_blob": db_user.blob_balance
+    }
 
 @app.post("/api/user/{user_id}/fish", response_model=schemas.Fish)
 async def user_fish(user_id: int, db: Session = Depends(get_db)):
@@ -257,7 +311,7 @@ async def get_market_pool():
         pool_blob=pool['poolBLOB'],
         k=pool['k'],
         current_price=current_price,
-        last_update=pool.get('lastUpdate', datetime.utcnow())
+        last_update=pool.get('lastUpdate', datetime.now(timezone.utc))
     )
 
 @app.post("/api/market/trade", response_model=schemas.TradeResponse)
@@ -273,10 +327,9 @@ async def execute_market_trade(trade_request: schemas.TradeRequest, db: Session 
         user = crud.get_user(db, trade_request.user_id)
         logger.info(f"Created new user {trade_request.user_id} with {INITIAL_USER_BALANCE_BC} BC")
 
-    # Get user's BLOB balance from a custom field (we'll add this)
-    # For now, calculate from trades
+    # Get user's balances
     balance_bc = user.coins
-    balance_blob = 0.0  # TODO: Track in database
+    balance_blob = user.blob_balance
 
     # Check user balance
     if trade_request.trade_type == "BUY":
@@ -308,10 +361,12 @@ async def execute_market_trade(trade_request: schemas.TradeRequest, db: Session 
         if trade_request.trade_type == "BUY":
             # Spent BC, received BLOB
             crud.add_coins(db, trade_request.user_id, -trade_request.amount)
+            crud.add_blob(db, trade_request.user_id, result['amount_out'])
             new_balance_bc = balance_bc - trade_request.amount
             new_balance_blob = balance_blob + result['amount_out']
         else:
             # Spent BLOB, received BC
+            crud.add_blob(db, trade_request.user_id, -trade_request.amount)
             crud.add_coins(db, trade_request.user_id, result['amount_out'])
             new_balance_bc = balance_bc + result['amount_out']
             new_balance_blob = balance_blob - trade_request.amount
@@ -329,7 +384,7 @@ async def execute_market_trade(trade_request: schemas.TradeRequest, db: Session 
             new_balance_bc=new_balance_bc,
             new_balance_blob=new_balance_blob,
             hash=result['hash'],
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
 
     except ValueError as e:
@@ -370,6 +425,7 @@ async def get_all_users(db: Session = Depends(get_db)):
         'id': u.id,
         'username': u.username,
         'coins': u.coins,
+        'blob_balance': u.blob_balance,
         'level': u.level,
         'total_fish_caught': u.total_fish_caught,
         'created_at': u.created_at.isoformat() if u.created_at else None
@@ -393,45 +449,6 @@ async def admin_add_coins(user_id: int, amount: float, db: Session = Depends(get
         'new_balance': user.coins,
         'amount_added': amount
     }
-
-@app.on_event("startup")
-async def startup_event():
-    """Настройка бота при запуске приложения"""
-    # Инициализируем базу данных
-    from database import init_db, create_initial_locations, create_npc_fishermen
-    db = SessionLocal()
-    try:
-        init_db()
-        create_initial_locations(db)
-        create_npc_fishermen(db)
-        logger.info("Database initialized successfully")
-    except Exception as e:
-        logger.error(f"Failed to initialize database: {e}")
-    finally:
-        db.close()
-
-    # Initialize global market pool
-    try:
-        market_service.initialize_global_pool()
-        logger.info("Global market pool initialized")
-    except Exception as e:
-        logger.error(f"Failed to initialize market pool: {e}")
-
-    # Настраиваем бота
-    telegram_bot.setup_bot()
-    if TELEGRAM_BOT_TOKEN:
-        try:
-            await telegram_bot.start_webhook_bot()
-        except Exception as e:
-            logger.error(f"Failed to start webhook bot: {e}")
-            logger.warning("Bot will continue without webhook. You can set it up manually later.")
-    else:
-        logger.error("TELEGRAM_BOT_TOKEN не найден. Бот не будет запущен.")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Очистка ресурсов при остановке"""
-    logger.info("Приложение завершает работу.")
 
 # Если запускаем локально, то используем uvicorn
 if __name__ == "__main__":

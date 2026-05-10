@@ -16,6 +16,7 @@ class User(Base):
     
     # Fishing progress
     coins = Column(Float, default=0)
+    blob_balance = Column(Float, default=0)  # $BLOB token balance
     level = Column(Integer, default=1)
     experience = Column(Float, default=0)
     

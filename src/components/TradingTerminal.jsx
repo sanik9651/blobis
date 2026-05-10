@@ -54,13 +54,18 @@ const TradingTerminal = () => {
       const result = await market.executeMarketOrder(amount, isBuying, 5.0);
 
       if (result && result.success) {
-        // Update local balances based on trade result
+        // Update local balances based on trade result from backend
         if (isBuying) {
           balance.deductBC(amount);
           balance.addBLOB(result.amount_out);
         } else {
           balance.deductBLOB(amount);
           balance.addBC(result.amount_out);
+        }
+
+        // Refresh balance from backend to ensure sync
+        if (balance.refreshBalance) {
+          await balance.refreshBalance();
         }
 
         setTradeAmount('');

@@ -54,6 +54,20 @@ def add_coins(db: Session, user_id: int, amount: float):
         db.refresh(db_user)
     return db_user
 
+def add_blob(db: Session, user_id: int, amount: float):
+    """Add BLOB tokens to user balance"""
+    db_user = get_user(db, user_id)
+    if db_user:
+        db_user.blob_balance += amount
+        db.commit()
+        db.refresh(db_user)
+    return db_user
+
+def get_blob_balance(db: Session, user_id: int) -> float:
+    """Get user's BLOB token balance"""
+    db_user = get_user(db, user_id)
+    return db_user.blob_balance if db_user else 0.0
+
 def add_experience(db: Session, user_id: int, xp: float):
     db_user = get_user(db, user_id)
     if db_user:

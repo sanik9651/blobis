@@ -14,6 +14,7 @@ class User(UserBase):
     telegram_id: str
     first_name: Optional[str] = None
     coins: float
+    blob_balance: float
     level: int
     experience: float
     bite_speed: int
