@@ -3,7 +3,6 @@ import json
 import logging
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
-from firestore_client import firestore
 
 logger = logging.getLogger(__name__)
 
@@ -13,39 +12,28 @@ INITIAL_POOL_BLOB = 10000.0
 TRADE_FEE = 0.003  # 0.3% fee
 MAX_TRADES_PER_MINUTE = 10
 
+# In-memory storage
+_memory_pool = {
+    'poolBC': INITIAL_POOL_BC,
+    'poolBLOB': INITIAL_POOL_BLOB,
+    'k': INITIAL_POOL_BC * INITIAL_POOL_BLOB,
+    'lastUpdate': datetime.utcnow(),
+    'version': 1
+}
+_memory_trades = []
+
 class MarketService:
     def __init__(self):
-        self.firestore = firestore
-        logger.info("Market service initialized with Firestore REST API")
+        logger.info("Market service initialized with in-memory storage")
 
     def initialize_global_pool(self):
-        """Initialize global liquidity pool if it doesn't exist"""
-        pool = self.firestore.get_document('market/globalPool')
-
-        if not pool:
-            initial_data = {
-                'poolBC': INITIAL_POOL_BC,
-                'poolBLOB': INITIAL_POOL_BLOB,
-                'k': INITIAL_POOL_BC * INITIAL_POOL_BLOB,
-                'lastUpdate': datetime.utcnow(),
-                'version': 1
-            }
-            success = self.firestore.set_document('market/globalPool', initial_data)
-            if success:
-                logger.info(f"Global pool initialized: BC={INITIAL_POOL_BC}, BLOB={INITIAL_POOL_BLOB}")
-            return success
-
-        logger.info(f"Global pool already exists: BC={pool.get('poolBC')}, BLOB={pool.get('poolBLOB')}")
+        """Initialize global liquidity pool"""
+        logger.info(f"Global pool initialized: BC={_memory_pool['poolBC']}, BLOB={_memory_pool['poolBLOB']}")
         return True
 
     def get_global_pool(self) -> Optional[Dict[str, Any]]:
         """Get current global pool state"""
-        pool = self.firestore.get_document('market/globalPool')
-        if not pool:
-            # Initialize if doesn't exist
-            self.initialize_global_pool()
-            pool = self.firestore.get_document('market/globalPool')
-        return pool
+        return _memory_pool.copy()
 
     def calculate_trade(self, pool_bc: float, pool_blob: float, amount: float, is_buy: bool) -> Dict[str, float]:
         """Calculate trade output using AMM formula x*y=k"""
@@ -80,9 +68,12 @@ class MarketService:
         }
 
     def check_rate_limit(self, user_id: int) -> bool:
-        """Check if user exceeded rate limit (max 10 trades per minute)"""
-        # For now, always allow (rate limiting can be added later with Firestore queries)
-        return True
+        """Check if user exceeded rate limit"""
+        one_minute_ago = datetime.utcnow() - timedelta(minutes=1)
+        user_trades = [t for t in _memory_trades
+                      if t.get('userId') == str(user_id)
+                      and t.get('timestamp', datetime.min) >= one_minute_ago]
+        return len(user_trades) < MAX_TRADES_PER_MINUTE
 
     def generate_trade_hash(self, trade_data: Dict[str, Any]) -> str:
         """Generate SHA256 hash for trade validation"""
@@ -90,7 +81,9 @@ class MarketService:
         return hashlib.sha256(trade_string.encode()).hexdigest()
 
     def execute_trade(self, user_id: int, trade_type: str, amount: float, max_slippage: float = 5.0) -> Optional[Dict[str, Any]]:
-        """Execute a trade with validation"""
+        """Execute a trade"""
+        global _memory_pool, _memory_trades
+
         # Validate inputs
         if amount <= 0:
             raise ValueError("Amount must be positive")
@@ -103,13 +96,8 @@ class MarketService:
             raise ValueError("Rate limit exceeded. Maximum 10 trades per minute.")
 
         try:
-            # Get current pool
-            pool = self.get_global_pool()
-            if not pool:
-                raise ValueError("Pool not initialized")
-
-            pool_bc = pool['poolBC']
-            pool_blob = pool['poolBLOB']
+            pool_bc = _memory_pool['poolBC']
+            pool_blob = _memory_pool['poolBLOB']
 
             # Calculate trade
             is_buy = trade_type == "BUY"
@@ -119,18 +107,10 @@ class MarketService:
             if calc['slippage'] > max_slippage:
                 raise ValueError(f"Slippage {calc['slippage']:.2f}% exceeds maximum {max_slippage}%")
 
-            # Update pool in Firestore
-            new_pool = {
-                'poolBC': calc['new_pool_bc'],
-                'poolBLOB': calc['new_pool_blob'],
-                'k': calc['new_pool_bc'] * calc['new_pool_blob'],
-                'lastUpdate': datetime.utcnow(),
-                'version': pool.get('version', 1)
-            }
-
-            success = self.firestore.set_document('market/globalPool', new_pool)
-            if not success:
-                raise ValueError("Failed to update pool")
+            # Update pool
+            _memory_pool['poolBC'] = calc['new_pool_bc']
+            _memory_pool['poolBLOB'] = calc['new_pool_blob']
+            _memory_pool['lastUpdate'] = datetime.utcnow()
 
             # Create trade record
             trade_id = f"{user_id}_{int(datetime.utcnow().timestamp() * 1000)}"
@@ -150,8 +130,10 @@ class MarketService:
             trade_hash = self.generate_trade_hash(hash_data)
             trade_data['hash'] = trade_hash
 
-            # Save trade to Firestore
-            self.firestore.set_document(f'market/trades/{trade_id}', trade_data)
+            # Save trade
+            _memory_trades.insert(0, {**trade_data, 'id': trade_id})
+            if len(_memory_trades) > 1000:
+                _memory_trades = _memory_trades[:1000]
 
             logger.info(f"Trade executed: user={user_id}, type={trade_type}, amount={amount}, price={calc['price']:.2f}")
 
@@ -167,22 +149,39 @@ class MarketService:
 
     def get_candles(self, timeframe: str = '1m', limit: int = 100) -> list:
         """Get candles for specified timeframe"""
-        # Return empty for now, will be populated by aggregation system
         return []
 
     def get_24h_stats(self) -> Optional[Dict[str, Any]]:
         """Calculate 24h market statistics"""
-        pool = self.get_global_pool()
-        current_price = pool['poolBC'] / pool['poolBLOB'] if pool and pool['poolBLOB'] > 0 else 0
+        current_price = _memory_pool['poolBC'] / _memory_pool['poolBLOB']
 
-        # Return basic stats (can be enhanced with trade history later)
+        twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
+        recent_trades = [t for t in _memory_trades if t.get('timestamp', datetime.min) >= twenty_four_hours_ago]
+
+        if not recent_trades:
+            return {
+                'volume_24h': 0,
+                'high_24h': current_price,
+                'low_24h': current_price,
+                'change_24h': 0,
+                'change_percent_24h': 0,
+                'trades_24h': 0,
+                'current_price': current_price
+            }
+
+        prices = [t['price'] for t in recent_trades]
+        volumes = [t['amountIn'] for t in recent_trades]
+
+        first_price = prices[-1]
+        last_price = prices[0]
+
         return {
-            'volume_24h': 0,
-            'high_24h': current_price,
-            'low_24h': current_price,
-            'change_24h': 0,
-            'change_percent_24h': 0,
-            'trades_24h': 0,
+            'volume_24h': sum(volumes),
+            'high_24h': max(prices),
+            'low_24h': min(prices),
+            'change_24h': last_price - first_price,
+            'change_percent_24h': ((last_price - first_price) / first_price * 100) if first_price > 0 else 0,
+            'trades_24h': len(recent_trades),
             'current_price': current_price
         }
 

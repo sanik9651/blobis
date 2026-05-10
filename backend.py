@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException, Depends, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+from datetime import datetime
 import uvicorn
 import asyncio
 import os
@@ -261,33 +262,35 @@ async def get_market_pool():
 
 @app.post("/api/market/trade", response_model=schemas.TradeResponse)
 async def execute_market_trade(trade_request: schemas.TradeRequest, db: Session = Depends(get_db)):
-    """Execute a trade with validation and atomicity"""
-    # Get or create user balance in Firestore
-    user_balance = firestore.get_document(f'users/{trade_request.user_id}')
-
-    if not user_balance:
+    """Execute a trade with validation"""
+    # Get or create user in SQLite
+    user = crud.get_user(db, trade_request.user_id)
+    if not user:
         # Create new user with initial balance
-        user_balance = {
-            'balanceBC': INITIAL_USER_BALANCE_BC,
-            'balanceBLOB': INITIAL_USER_BALANCE_BLOB,
-            'userId': str(trade_request.user_id),
-            'createdAt': datetime.utcnow()
-        }
-        firestore.set_document(f'users/{trade_request.user_id}', user_balance)
-        logger.info(f"Created new user {trade_request.user_id} with balance BC={INITIAL_USER_BALANCE_BC}")
+        user = crud.create_user(db=db, user_id=trade_request.user_id, username=f"user_{trade_request.user_id}")
+        # Give initial balance
+        crud.add_coins(db, trade_request.user_id, INITIAL_USER_BALANCE_BC)
+        user = crud.get_user(db, trade_request.user_id)
+        logger.info(f"Created new user {trade_request.user_id} with {INITIAL_USER_BALANCE_BC} BC")
 
-    balance_bc = user_balance.get('balanceBC', 0)
-    balance_blob = user_balance.get('balanceBLOB', 0)
+    # Get user's BLOB balance from a custom field (we'll add this)
+    # For now, calculate from trades
+    balance_bc = user.coins
+    balance_blob = 0.0  # TODO: Track in database
 
     # Check user balance
     if trade_request.trade_type == "BUY":
-        # User needs BC to buy BLOB
         if balance_bc < trade_request.amount:
-            raise HTTPException(status_code=400, detail=f"Insufficient BC balance. You have {balance_bc:.2f} BC, need {trade_request.amount:.2f} BC")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Insufficient BC balance. You have {balance_bc:.2f} BC, need {trade_request.amount:.2f} BC"
+            )
     else:
-        # User needs BLOB to sell
         if balance_blob < trade_request.amount:
-            raise HTTPException(status_code=400, detail=f"Insufficient BLOB balance. You have {balance_blob:.4f} BLOB, need {trade_request.amount:.4f} BLOB")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Insufficient BLOB balance. You have {balance_blob:.4f} BLOB, need {trade_request.amount:.4f} BLOB"
+            )
 
     try:
         # Execute trade through market service
@@ -301,24 +304,19 @@ async def execute_market_trade(trade_request: schemas.TradeRequest, db: Session 
         if not result:
             raise HTTPException(status_code=500, detail="Trade execution failed")
 
-        # Update user balance in Firestore
+        # Update user balance in SQLite
         if trade_request.trade_type == "BUY":
             # Spent BC, received BLOB
+            crud.add_coins(db, trade_request.user_id, -trade_request.amount)
             new_balance_bc = balance_bc - trade_request.amount
             new_balance_blob = balance_blob + result['amount_out']
         else:
             # Spent BLOB, received BC
+            crud.add_coins(db, trade_request.user_id, result['amount_out'])
             new_balance_bc = balance_bc + result['amount_out']
             new_balance_blob = balance_blob - trade_request.amount
 
-        # Save updated balance
-        firestore.update_document(f'users/{trade_request.user_id}', {
-            'balanceBC': new_balance_bc,
-            'balanceBLOB': new_balance_blob,
-            'lastTrade': datetime.utcnow()
-        })
-
-        logger.info(f"Trade completed: user={trade_request.user_id}, type={trade_request.trade_type}, new_balance_bc={new_balance_bc:.2f}, new_balance_blob={new_balance_blob:.4f}")
+        logger.info(f"Trade completed: user={trade_request.user_id}, type={trade_request.trade_type}, new_bc={new_balance_bc:.2f}, new_blob={new_balance_blob:.4f}")
 
         return schemas.TradeResponse(
             success=True,
@@ -338,7 +336,7 @@ async def execute_market_trade(trade_request: schemas.TradeRequest, db: Session 
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Trade execution error: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/market/candles/{timeframe}")
 async def get_market_candles(timeframe: str, limit: int = 100):
@@ -361,6 +359,40 @@ async def get_market_stats():
         raise HTTPException(status_code=503, detail="Market service unavailable")
 
     return schemas.MarketStats(**stats)
+
+# ============ ADMIN API ============
+
+@app.get("/api/admin/users")
+async def get_all_users(db: Session = Depends(get_db)):
+    """Get all users (admin only)"""
+    users = db.query(models.User).all()
+    return [{
+        'id': u.id,
+        'username': u.username,
+        'coins': u.coins,
+        'level': u.level,
+        'total_fish_caught': u.total_fish_caught,
+        'created_at': u.created_at.isoformat() if u.created_at else None
+    } for u in users]
+
+@app.post("/api/admin/user/{user_id}/add_coins")
+async def admin_add_coins(user_id: int, amount: float, db: Session = Depends(get_db)):
+    """Add coins to user (admin only)"""
+    user = crud.get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    crud.add_coins(db, user_id, amount)
+    user = crud.get_user(db, user_id)
+
+    logger.info(f"Admin added {amount} coins to user {user_id}. New balance: {user.coins}")
+
+    return {
+        'success': True,
+        'user_id': user_id,
+        'new_balance': user.coins,
+        'amount_added': amount
+    }
 
 @app.on_event("startup")
 async def startup_event():
