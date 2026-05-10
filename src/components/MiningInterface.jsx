@@ -48,11 +48,12 @@ const MiningInterface = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-600 to-blue-800 text-white flex flex-col">
+    <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header */}
-      <div className="p-4 text-center">
-        <div className="text-6xl font-bold mb-2">{formatNumber(balance)}</div>
-        <div className="text-xl opacity-80">BC</div>
+      <div className="p-6 text-center border-b border-white/10">
+        <div className="text-sm text-gray-400 mb-1">Your Balance</div>
+        <div className="text-6xl font-bold text-yellow-400 mb-1">{formatNumber(balance)}</div>
+        <div className="text-xl text-gray-300">BC</div>
       </div>
 
       {/* Main Mining Button */}
@@ -66,24 +67,26 @@ const MiningInterface = ({
             onTouchEnd={() => setIsPressed(false)}
             onClick={handleMine}
             className={`
-              relative w-72 h-72 rounded-full bg-white
-              shadow-2xl transition-all duration-100
+              relative w-72 h-72 rounded-full
+              bg-gradient-to-br from-yellow-400 to-yellow-600
+              shadow-2xl shadow-yellow-500/50 transition-all duration-100
               ${isPressed ? 'scale-95' : 'scale-100'}
               flex items-center justify-center
               cursor-pointer select-none
+              border-4 border-yellow-300
             `}
           >
-            <div className="text-9xl">⛏️</div>
+            <div className="text-9xl">💰</div>
 
             {/* Glow effect */}
-            <div className="absolute inset-0 rounded-full bg-blue-400/30 animate-pulse" />
+            <div className="absolute inset-0 rounded-full bg-yellow-400/30 animate-pulse" />
           </button>
 
           {/* Particles */}
           {particles.map(particle => (
             <div
               key={particle.id}
-              className="absolute pointer-events-none text-yellow-300 font-bold text-2xl"
+              className="absolute pointer-events-none text-yellow-400 font-bold text-3xl"
               style={{
                 left: particle.x,
                 top: particle.y,
@@ -97,22 +100,22 @@ const MiningInterface = ({
       </div>
 
       {/* Stats Bar */}
-      <div className="bg-black/20 backdrop-blur-sm p-4">
+      <div className="bg-white/5 backdrop-blur-sm p-4 border-t border-white/10">
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="text-center">
-            <div className="text-sm opacity-70">Per Tap</div>
-            <div className="text-xl font-bold">+{formatNumber(clickPower)}</div>
+          <div className="text-center bg-white/5 rounded-xl p-3">
+            <div className="text-xs text-gray-400 mb-1">Per Tap</div>
+            <div className="text-2xl font-bold text-yellow-400">+{formatNumber(clickPower)}</div>
           </div>
-          <div className="text-center">
-            <div className="text-sm opacity-70">Per Second</div>
-            <div className="text-xl font-bold">+{formatNumber(passiveIncome)}</div>
+          <div className="text-center bg-white/5 rounded-xl p-3">
+            <div className="text-xs text-gray-400 mb-1">Per Second</div>
+            <div className="text-2xl font-bold text-yellow-400">+{formatNumber(passiveIncome)}</div>
           </div>
         </div>
 
         {/* Upgrades Button */}
         <button
           onClick={() => setShowUpgrades(!showUpgrades)}
-          className="w-full bg-white text-blue-600 py-4 rounded-2xl font-bold text-lg shadow-lg"
+          className="w-full bg-yellow-400 text-black py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-yellow-300 transition-colors"
         >
           {showUpgrades ? '✕ Close' : '⚡ Upgrades'}
         </button>
@@ -120,14 +123,14 @@ const MiningInterface = ({
 
       {/* Upgrades Modal */}
       {showUpgrades && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-sm z-50 overflow-y-auto">
           <div className="min-h-screen p-4 pb-20">
             <div className="max-w-md mx-auto">
               <div className="flex justify-between items-center mb-6 mt-4">
-                <h2 className="text-2xl font-bold">Upgrades</h2>
+                <h2 className="text-3xl font-bold text-yellow-400">Upgrades</h2>
                 <button
                   onClick={() => setShowUpgrades(false)}
-                  className="text-3xl"
+                  className="text-3xl text-white"
                 >
                   ✕
                 </button>
@@ -146,23 +149,23 @@ const MiningInterface = ({
                       onClick={() => canAfford && onPurchaseUpgrade(key)}
                       disabled={!canAfford}
                       className={`
-                        w-full bg-white/10 backdrop-blur-sm rounded-2xl p-4
-                        transition-all
-                        ${canAfford ? 'opacity-100' : 'opacity-50'}
+                        w-full bg-white/10 backdrop-blur-sm rounded-xl p-4
+                        transition-all border border-white/20
+                        ${canAfford ? 'opacity-100 hover:bg-white/20' : 'opacity-40'}
                       `}
                     >
                       <div className="flex items-center gap-4">
                         <div className="text-5xl">{upgrade.icon}</div>
                         <div className="flex-1 text-left">
-                          <div className="font-bold text-lg">{upgrade.name}</div>
-                          <div className="text-sm opacity-70">Level {level}</div>
-                          <div className="text-sm text-yellow-300">
+                          <div className="font-bold text-lg text-white">{upgrade.name}</div>
+                          <div className="text-sm text-gray-400">Level {level}</div>
+                          <div className="text-sm text-yellow-400 font-semibold">
                             +{(upgrade.effect * level).toFixed(1)} {key === 'clickPower' ? 'per tap' : 'BC/s'}
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold text-lg">{formatNumber(cost)}</div>
-                          <div className="text-xs opacity-70">BC</div>
+                          <div className="font-bold text-xl text-yellow-400">{formatNumber(cost)}</div>
+                          <div className="text-xs text-gray-400">BC</div>
                         </div>
                       </div>
                     </button>

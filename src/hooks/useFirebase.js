@@ -6,17 +6,33 @@ import firebaseConfig from '../firebase.config.js';
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Get Telegram user ID
-const getTelegramUserId = () => {
-  if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
-    return window.Telegram.WebApp.initDataUnsafe.user.id.toString();
+// Get Telegram user data
+const getTelegramUserData = () => {
+  if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
+    const user = window.Telegram.WebApp.initDataUnsafe.user;
+    return {
+      id: user.id.toString(),
+      username: user.username || `user_${user.id}`,
+      firstName: user.first_name || '',
+      lastName: user.last_name || '',
+      languageCode: user.language_code || 'en'
+    };
   }
   // Fallback for development
-  return localStorage.getItem('dev_user_id') || 'dev_user_' + Math.random().toString(36).substr(2, 9);
+  const devId = localStorage.getItem('dev_user_id') || 'dev_user_' + Math.random().toString(36).substr(2, 9);
+  localStorage.setItem('dev_user_id', devId);
+  return {
+    id: devId,
+    username: `dev_${devId}`,
+    firstName: 'Dev',
+    lastName: 'User',
+    languageCode: 'en'
+  };
 };
 
 export const useFirebase = () => {
-  const userId = getTelegramUserId();
+  const userData = getTelegramUserData();
+  const userId = userData.id;
 
   // Save user data to Firestore
   const saveUserData = async (data) => {
@@ -24,6 +40,12 @@ export const useFirebase = () => {
       const userRef = doc(db, 'users', userId);
       await setDoc(userRef, {
         ...data,
+        // Telegram user info
+        telegramId: userData.id,
+        username: userData.username,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        languageCode: userData.languageCode,
         lastUpdated: serverTimestamp()
       }, { merge: true });
       return true;
@@ -105,6 +127,7 @@ export const useFirebase = () => {
 
   return {
     userId,
+    userData,
     saveUserData,
     loadUserData,
     saveBalance,

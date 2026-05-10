@@ -1,145 +1,200 @@
-# ⛏️ Blobis Exchange - DeFi Trading Simulator
+# 🎮 Blobis Exchange - DeFi Trading Simulator
 
-Профессиональный симулятор криптовалютной биржи с реальной математикой AMM (Automated Market Maker) и системой майнинга. Проект демонстрирует работу DeFi-протоколов в игровой форме.
+![Version](https://img.shields.io/badge/version-2.0.0-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Platform](https://img.shields.io/badge/platform-Telegram%20Mini%20App-blue)
 
-## 🎮 Особенности
+**Blobis Exchange** - это DeFi симулятор с майнингом и торговлей криптовалютой, созданный как Telegram Mini App в стиле NotCoin.
 
-- **Рыбалка в реальном времени** - Забрасывайте удочку и ловите уникальных рыб
-- **AI-генерация рыб** - Каждая рыба уникальна благодаря AI
-- **Система редкости** - Common, Rare, Epic, Legendary, Mythical
-- **Множество локаций** - Река, озеро, горы, болото, океан, пещера
-- **Аукционная система** - Продавайте редких рыб другим игрокам
-- **Система квестов** - Выполняйте задания и получайте награды
-- **Прогрессия** - Повышайте уровень и открывайте новые локации
-- **Турниры** - Соревнуйтесь с другими игроками
-- **Таблица лидеров** - Станьте лучшим рыбаком
-- **Система комбо** - Ловите рыбу подряд для бонусов
-- **Улучшения** - Прокачивайте скорость клёва, шанс критического улова и другое
+## ✨ Особенности
 
-## 📦 Технологический стек
+### 🎨 Дизайн
+- **NotCoin-стиль интерфейс** - черно-белый дизайн с золотыми акцентами
+- **Нижняя навигация** - удобное переключение между вкладками
+- **Минималистичный UI** - фокус на главном
+- **Адаптивный дизайн** - идеально работает на мобильных
 
-- **React 18** - UI framework
-- **Vite** - Build tool & dev server
-- **Tailwind CSS** - Styling
-- **Canvas API** - Графики OHLC
-- **localStorage** - Персистентность данных
-- **Telegram WebApp API** - Интеграция с Telegram
+### ⛏️ Майнинг
+- **Tap-to-earn** механика - кликай и зарабатывай BC
+- **Пассивный доход** - автоматический майнинг в фоне
+- **Система апгрейдов** - улучшай мощность майнинга
+- **Визуальные эффекты** - анимации и частицы
 
-## 📋 Требования
+### 📈 Трейдинг
+- **AMM (Automated Market Maker)** - реалистичная математика DeFi
+- **Slippage расчет** - как в настоящих DEX
+- **Комиссия 0.3%** - стандарт индустрии
+- **История сделок** - отслеживай свои трейды
 
-- Node.js 18+
-- npm или yarn
+### 🔥 Firebase интеграция
+- **Облачное хранилище** - данные сохраняются в Firestore
+- **Привязка к Telegram** - username и user_id
+- **Синхронизация** - играй с любого устройства
+- **Лидерборд** - соревнуйся с другими игроками
 
-## 🛠️ Установка и запуск
+## 🚀 Быстрый старт
+
+### Локальная разработка
 
 ```bash
-# Установить зависимости
+# Клонируйте репозиторий
+git clone https://github.com/sanik9651/blobis.git
+cd blobis
+
+# Установите зависимости
 npm install
 
-# Запустить dev-сервер
+# Создайте .env файл
+cp .env.example .env
+# Заполните Firebase конфигурацию
+
+# Запустите dev-сервер
 npm run dev
 
-# Собрать для продакшена
-npm run build
-
-# Превью production build
-npm run preview
+# Откройте http://localhost:5173
 ```
 
-Сервер запустится на http://localhost:3000
+### Деплой на Render.com
+
+Следуйте инструкциям в [DEPLOY_GUIDE.md](./DEPLOY_GUIDE.md)
 
 ## 📁 Структура проекта
 
 ```
-src/
-├── hooks/
-│   ├── useMarket.js      # AMM движок, Order Book, свечи
-│   ├── useMining.js      # Система майнинга и апгрейдов
-│   └── useBalance.js     # Управление балансами BC/$BLOB
-├── components/
-│   ├── TradingTerminal.jsx    # Главный компонент
-│   ├── CandlestickChart.jsx   # OHLC график
-│   ├── OrderBook.jsx          # Стакан заявок
-│   ├── TradeHistory.jsx       # История сделок
-│   ├── TradingPanel.jsx       # Панель торговли
-│   └── MiningInterface.jsx    # Интерфейс майнинга
-├── main.jsx              # Entry point
-└── index.css             # Global styles
+blobis/
+├── src/
+│   ├── components/
+│   │   ├── TradingTerminal.jsx  # Главный компонент
+│   │   ├── MiningInterface.jsx  # Интерфейс майнинга
+│   │   └── ...
+│   ├── hooks/
+│   │   ├── useFirebase.js       # Firebase интеграция
+│   │   ├── useBalance.js        # Управление балансом
+│   │   ├── useMarket.js         # AMM логика
+│   │   └── useMining.js         # Майнинг логика
+│   ├── firebase.config.js       # Firebase конфигурация
+│   ├── main.jsx                 # Точка входа
+│   └── index.css                # Стили
+├── backend.py                   # FastAPI backend
+├── telegram_bot.py              # Telegram bot
+├── firestore.rules              # Firebase правила
+├── DEPLOY_GUIDE.md              # Гайд по деплою
+├── TOKENOMICS.md                # Документация по токенам
+└── package.json
 ```
 
 ## 🎮 Как играть
 
-### 1. Mining (Майнинг)
-- Кликайте на кнопку **MINE** для получения Blobis Coins (BC)
-- Покупайте апгрейды для увеличения дохода:
-  - **Click Power** - больше BC за клик
-  - **CPU/GPU/ASIC** - пассивный доход
-  - **Mining Farm** - индустриальный масштаб
-  - **Quantum Miner** - максимальная эффективность
+### 1. Майнинг (⛏️)
+- Кликай на золотую монету для майнинга BC
+- Покупай апгрейды для увеличения дохода
+- Получай пассивный доход каждую секунду
 
-### 2. Trading (Торговля)
-- Переключитесь на вкладку **Trading**
-- Используйте накопленные BC для покупки токенов $BLOB
-- Два типа ордеров:
-  - **Market** - мгновенное исполнение по текущей цене
-  - **Limit** - исполнение при достижении указанной цены
+### 2. Трейдинг (📈)
+- Покупай $BLOB токены за BC
+- Продавай $BLOB обратно за BC
+- Следи за ценой и slippage
+- Зарабатывай на волатильности
 
-### 3. Стратегия
-- Следите за графиком цены BC/$BLOB
-- Покупайте $BLOB на просадках
-- Продавайте на пиках
-- Учитывайте slippage при больших объемах
-- Комиссия 0.3% влияет на прибыльность
+### 3. Профиль (👤)
+- Смотри свою статистику
+- Отслеживай общий баланс
+- Проверяй майнинг показатели
 
-## 🧮 Математика AMM
+## 🔧 Технологии
 
-### Формула постоянного продукта
-```
-x * y = k
+### Frontend
+- **React 18** - UI библиотека
+- **Vite** - сборщик
+- **Tailwind CSS** - стили
+- **Firebase SDK** - облачное хранилище
 
-где:
-x = резерв BC в пуле
-y = резерв $BLOB в пуле
-k = константа (1,000,000 * 10,000 = 10,000,000,000)
-```
+### Backend
+- **FastAPI** - Python веб-фреймворк
+- **SQLite** - локальная БД
+- **python-telegram-bot** - Telegram интеграция
 
-### Расчет цены
-```
-Цена = poolBC / poolBLOB
-```
+### Инфраструктура
+- **Render.com** - хостинг
+- **Firebase Firestore** - облачная БД
+- **Telegram Mini Apps** - платформа
 
-### Расчет slippage при покупке
-```
-amountInAfterFee = amountIn * (1 - 0.003)
-newPoolBC = poolBC + amountInAfterFee
-newPoolBLOB = k / newPoolBC
-amountOut = poolBLOB - newPoolBLOB
-slippage = ((newPrice - currentPrice) / currentPrice) * 100
-```
+## 📊 Токеномика
 
-## 🔒 Безопасность
+Подробная информация в [TOKENOMICS.md](./TOKENOMICS.md)
 
-- Все данные хранятся локально в localStorage
-- Нет серверных запросов
-- Нет реальных денег
-- Чисто образовательный проект
+### Текущая реализация
+- **BC (Blobis Coin)** - игровая валюта (симулятор)
+- **$BLOB** - торговый токен (симулятор)
+- **AMM** - Constant Product формула (x * y = k)
 
-## 🎯 Roadmap
+### Будущее
+- Интеграция с TON Blockchain
+- Реальный токен $BLOB
+- Bridge система BC → $BLOB
+- Листинг на DEX
 
-- [x] AMM движок с формулой x*y=k
-- [x] Order Book система
-- [x] OHLC графики
-- [x] Mining система
-- [x] Trading Terminal UI
-- [ ] Firebase интеграция для мультиплеера
-- [ ] Технические индикаторы (RSI, MACD, MA)
+## 🔐 Безопасность
+
+### Текущие меры
+- ✅ Firebase Firestore для хранения данных
+- ✅ Привязка к Telegram user_id
+- ✅ Валидация на клиенте
+
+### Для продакшена
+- ⚠️ Добавить валидацию Telegram initData на backend
+- ⚠️ Настроить строгие Firestore Rules
+- ⚠️ Добавить rate limiting
+- ⚠️ Включить HTTPS only
+
+## 📈 Roadmap
+
+### v2.0 (Текущая версия) ✅
+- [x] NotCoin-стиль UI
+- [x] Firebase интеграция
+- [x] Telegram username привязка
+- [x] Черно-белый дизайн с золотом
+
+### v2.1 (Планируется)
 - [ ] Лидерборд
-- [ ] Достижения и квесты
+- [ ] Реферальная система
+- [ ] Ежедневные награды
+- [ ] Достижения
 
-## 📄 Лицензия
+### v3.0 (Будущее)
+- [ ] TON Blockchain интеграция
+- [ ] Реальный токен $BLOB
+- [ ] NFT система
+- [ ] Мультиплеер режим
 
-MIT License - используйте свободно для обучения и развлечения.
+## 🤝 Вклад
+
+Приветствуются pull requests! Для больших изменений сначала откройте issue.
+
+## 📝 Лицензия
+
+MIT License - см. [LICENSE](./LICENSE)
+
+## 👨‍💻 Автор
+
+**sanik9651**
+- GitHub: [@sanik9651](https://github.com/sanik9651)
+- Telegram: [@sanik9651](https://t.me/sanik9651)
+
+## 🙏 Благодарности
+
+- **NotCoin** - за вдохновение дизайна
+- **Uniswap** - за AMM формулу
+- **Telegram** - за Mini Apps платформу
+- **Firebase** - за облачную инфраструктуру
+
+## 📞 Поддержка
+
+Если у вас есть вопросы или проблемы:
+1. Откройте [Issue](https://github.com/sanik9651/blobis/issues)
+2. Напишите в Telegram: [@sanik9651](https://t.me/sanik9651)
+3. Проверьте [DEPLOY_GUIDE.md](./DEPLOY_GUIDE.md)
 
 ---
 
-**Powered by AMM • x*y=k Protocol**
+**Сделано с ❤️ для Telegram Mini Apps**
