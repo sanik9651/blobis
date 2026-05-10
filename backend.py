@@ -16,6 +16,7 @@ import crud, models, schemas
 from database import SessionLocal, engine
 from ai_utils import generate_fish_image, generate_fish_description, get_ai_response
 from market_service import market_service
+from firestore_client import firestore
 from config import (
     SERVER_HOST, SERVER_PORT, TELEGRAM_BOT_TOKEN, WEBAPP_URL, WEBHOOK_URL, WEBHOOK_PATH, WEBHOOK_SECRET,
     DAILY_BONUS, AUCTION_COMMISSION, REFERRAL_PERCENTAGE, REFERRAL_BONUS,
@@ -27,6 +28,10 @@ from config import (
     TOURNAMENT_DURATION_HOURS, TOURNAMENT_FIRST_PLACE_REWARD, TOURNAMENT_PARTICIPANT_REWARD, TOURNAMENT_TOP_10_REWARD,
     RARITY_PROBABILITIES, RARITY_COLORS
 )
+
+# Initial balance for new users
+INITIAL_USER_BALANCE_BC = 1000.0
+INITIAL_USER_BALANCE_BLOB = 0.0
 
 # Импорт telegram_bot как модуля
 import telegram_bot
@@ -257,22 +262,32 @@ async def get_market_pool():
 @app.post("/api/market/trade", response_model=schemas.TradeResponse)
 async def execute_market_trade(trade_request: schemas.TradeRequest, db: Session = Depends(get_db)):
     """Execute a trade with validation and atomicity"""
-    # Get or create user
-    user = crud.get_user(db, trade_request.user_id)
-    if not user:
-        # Auto-create user if doesn't exist
-        user = crud.create_user(db=db, user_id=trade_request.user_id, username=f"user_{trade_request.user_id}")
-        logger.info(f"Auto-created user {trade_request.user_id} for trading")
+    # Get or create user balance in Firestore
+    user_balance = firestore.get_document(f'users/{trade_request.user_id}')
 
-    # Check user balance (this should be in Firebase, but for now check SQLite)
+    if not user_balance:
+        # Create new user with initial balance
+        user_balance = {
+            'balanceBC': INITIAL_USER_BALANCE_BC,
+            'balanceBLOB': INITIAL_USER_BALANCE_BLOB,
+            'userId': str(trade_request.user_id),
+            'createdAt': datetime.utcnow()
+        }
+        firestore.set_document(f'users/{trade_request.user_id}', user_balance)
+        logger.info(f"Created new user {trade_request.user_id} with balance BC={INITIAL_USER_BALANCE_BC}")
+
+    balance_bc = user_balance.get('balanceBC', 0)
+    balance_blob = user_balance.get('balanceBLOB', 0)
+
+    # Check user balance
     if trade_request.trade_type == "BUY":
         # User needs BC to buy BLOB
-        if user.coins < trade_request.amount:
-            raise HTTPException(status_code=400, detail="Insufficient BC balance")
+        if balance_bc < trade_request.amount:
+            raise HTTPException(status_code=400, detail=f"Insufficient BC balance. You have {balance_bc:.2f} BC, need {trade_request.amount:.2f} BC")
     else:
-        # User needs BLOB to sell (check Firebase balance)
-        # TODO: Implement Firebase balance check
-        pass
+        # User needs BLOB to sell
+        if balance_blob < trade_request.amount:
+            raise HTTPException(status_code=400, detail=f"Insufficient BLOB balance. You have {balance_blob:.4f} BLOB, need {trade_request.amount:.4f} BLOB")
 
     try:
         # Execute trade through market service
@@ -286,17 +301,24 @@ async def execute_market_trade(trade_request: schemas.TradeRequest, db: Session 
         if not result:
             raise HTTPException(status_code=500, detail="Trade execution failed")
 
-        # Update user balance in SQLite (temporary - should be in Firebase)
+        # Update user balance in Firestore
         if trade_request.trade_type == "BUY":
             # Spent BC, received BLOB
-            crud.add_coins(db, trade_request.user_id, -trade_request.amount)
-            new_balance_bc = user.coins - trade_request.amount
-            new_balance_blob = 0  # TODO: Get from Firebase
+            new_balance_bc = balance_bc - trade_request.amount
+            new_balance_blob = balance_blob + result['amount_out']
         else:
             # Spent BLOB, received BC
-            crud.add_coins(db, trade_request.user_id, result['amount_out'])
-            new_balance_bc = user.coins + result['amount_out']
-            new_balance_blob = 0  # TODO: Get from Firebase
+            new_balance_bc = balance_bc + result['amount_out']
+            new_balance_blob = balance_blob - trade_request.amount
+
+        # Save updated balance
+        firestore.update_document(f'users/{trade_request.user_id}', {
+            'balanceBC': new_balance_bc,
+            'balanceBLOB': new_balance_blob,
+            'lastTrade': datetime.utcnow()
+        })
+
+        logger.info(f"Trade completed: user={trade_request.user_id}, type={trade_request.trade_type}, new_balance_bc={new_balance_bc:.2f}, new_balance_blob={new_balance_blob:.4f}")
 
         return schemas.TradeResponse(
             success=True,
