@@ -128,11 +128,6 @@ def get_db():
     finally:
         db.close()
 
-@app.get("/api/health")
-async def health_check():
-    """Health check endpoint for monitoring"""
-    return {"status": "ok", "service": "blobis-api"}
-
 # Монтируем статические файлы для assets (JS, CSS)
 if static_files_mounted:
     assets_dir = os.path.join(static_dir, "assets")
@@ -142,16 +137,18 @@ if static_files_mounted:
     else:
         logger.warning(f"Assets directory not found: {assets_dir}")
 
-# Catch-all route для SPA - должен быть ПОСЛЕДНИМ
-@app.get("/{full_path:path}")
-async def serve_spa(full_path: str):
-    """Serve SPA for all non-API routes"""
-    if static_files_mounted:
-        index_file = os.path.join(static_dir, "index.html")
-        if os.path.exists(index_file):
-            from fastapi.responses import FileResponse
-            return FileResponse(index_file)
-    return {"detail": "Not Found"}
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint for monitoring"""
+    return {"status": "ok", "service": "blobis-api"}
 
 @app.post(WEBHOOK_PATH)
 async def bot_webhook(request: Request, background_tasks: BackgroundTasks):
@@ -472,6 +469,18 @@ async def admin_add_coins(user_id: int, amount: float, db: Session = Depends(get
         'new_balance': user.coins,
         'amount_added': amount
     }
+
+# Catch-all route для SPA - ДОЛЖЕН БЫТЬ ПОСЛЕДНИМ
+@app.get("/{full_path:path}")
+async def serve_spa(full_path: str):
+    """Serve SPA for all non-API routes"""
+    if static_files_mounted:
+        index_file = os.path.join(static_dir, "index.html")
+        if os.path.exists(index_file):
+            from fastapi.responses import FileResponse
+            return FileResponse(index_file)
+
+    return {"detail": "Frontend not built. Run 'npm run build' first."}
 
 # Если запускаем локально, то используем uvicorn
 if __name__ == "__main__":
