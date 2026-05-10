@@ -52,9 +52,11 @@ app = FastAPI(
 # Vite build создает dist/ директорию
 import os
 static_dir = os.path.join(os.path.dirname(__file__), "dist")
+static_files_mounted = False
 if os.path.exists(static_dir):
-    app.mount("/webapp", StaticFiles(directory=static_dir, html=True), name="webapp")
-    logger.info(f"Static files mounted from {static_dir}")
+    # Монтируем статические файлы на корневой путь в конце (после всех API роутов)
+    static_files_mounted = True
+    logger.info(f"Static files will be mounted from {static_dir}")
 else:
     logger.warning(f"Static directory not found: {static_dir}. Run 'npm run build' first.")
 
@@ -66,20 +68,10 @@ def get_db():
     finally:
         db.close()
 
-@app.get("/", response_class=HTMLResponse)
-async def read_root():
-    return """
-    <html>
-        <head>
-            <title>Blobis API</title>
-        </head>
-        <body>
-            <h1>Blobis API</h1>
-            <p>Welcome to the Blobis API. Access the docs at <a href="/docs">/docs</a></p>
-            <p>Go to the WebApp at <a href="/webapp">/webapp</a></p>
-        </body>
-    </html>
-    """
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint for monitoring"""
+    return {"status": "ok", "service": "blobis-api"}
 
 @app.post(WEBHOOK_PATH)
 async def bot_webhook(request: Request, background_tasks: BackgroundTasks):
@@ -245,6 +237,12 @@ async def startup_event():
 async def shutdown_event():
     """Очистка ресурсов при остановке"""
     logger.info("Приложение завершает работу.")
+
+# Монтируем статические файлы в самом конце (после всех API роутов)
+# Это позволяет React Router обрабатывать все неизвестные пути
+if static_files_mounted:
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+    logger.info(f"Static files mounted at root path from {static_dir}")
 
 # Если запускаем локально, то используем uvicorn
 if __name__ == "__main__":
