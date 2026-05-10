@@ -1,0 +1,10 @@
+# Files to exclude from deployment
+node_modules/
+.git/
+.claude/
+__pycache__/
+*.pyc
+*.log
+.env.example
+*.md
+!README.md

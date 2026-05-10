@@ -53,7 +53,19 @@ app = FastAPI(
 import os
 static_dir = os.path.join(os.path.dirname(__file__), "dist")
 static_files_mounted = False
+
+logger.info(f"Checking for static directory: {static_dir}")
+logger.info(f"Current working directory: {os.getcwd()}")
+logger.info(f"Directory exists: {os.path.exists(static_dir)}")
+
 if os.path.exists(static_dir):
+    # Список файлов в dist/
+    try:
+        files = os.listdir(static_dir)
+        logger.info(f"Files in dist/: {files}")
+    except Exception as e:
+        logger.error(f"Error listing dist/ files: {e}")
+
     # Монтируем статические файлы на корневой путь в конце (после всех API роутов)
     static_files_mounted = True
     logger.info(f"Static files will be mounted from {static_dir}")
