@@ -257,10 +257,12 @@ async def get_market_pool():
 @app.post("/api/market/trade", response_model=schemas.TradeResponse)
 async def execute_market_trade(trade_request: schemas.TradeRequest, db: Session = Depends(get_db)):
     """Execute a trade with validation and atomicity"""
-    # Validate user exists
+    # Get or create user
     user = crud.get_user(db, trade_request.user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        # Auto-create user if doesn't exist
+        user = crud.create_user(db=db, user_id=trade_request.user_id, username=f"user_{trade_request.user_id}")
+        logger.info(f"Auto-created user {trade_request.user_id} for trading")
 
     # Check user balance (this should be in Firebase, but for now check SQLite)
     if trade_request.trade_type == "BUY":
