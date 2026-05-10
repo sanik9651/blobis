@@ -9,7 +9,6 @@ venv/
 ENV/
 build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -60,7 +59,7 @@ output/
 node_modules/
 package-lock.json
 
-# Vite - COMMENTED OUT to commit dist/ for Render
+# Vite - dist/ is committed for Render deployment
 # dist/
 .vite/
 
