@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase';
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import firebaseConfig from '../firebase.config.js';
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://blobis-gqla.onrender.com';
 const TRADING_FEE = 0.003; // 0.3% fee

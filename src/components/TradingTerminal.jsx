@@ -4,6 +4,7 @@ import { useMining } from '../hooks/useMining';
 import { useBalance } from '../hooks/useBalance';
 import { useFirebase } from '../hooks/useFirebase';
 import MiningInterface from './MiningInterface';
+import CandlestickChart from './CandlestickChart';
 
 const TradingTerminal = () => {
   const [activeTab, setActiveTab] = useState('MINING'); // MINING, TRADING, PROFILE
@@ -182,6 +183,19 @@ const TradingTerminal = () => {
 
         {/* Trading Interface */}
         <div className="p-6">
+          {/* Candlestick Chart */}
+          {market.candles.length > 0 && (
+            <div className="mb-6 bg-white/5 border border-white/10 rounded-xl p-4 overflow-x-auto">
+              <div className="text-sm font-bold text-white mb-3">Price Chart</div>
+              <CandlestickChart
+                candles={market.candles}
+                currentCandle={null}
+                width={Math.min(window.innerWidth - 80, 600)}
+                height={300}
+              />
+            </div>
+          )}
+
           {/* Buy/Sell Toggle */}
           <div className="flex gap-2 mb-6">
             <button
@@ -336,7 +350,27 @@ const TradingTerminal = () => {
   return (
     <div className="min-h-screen bg-black text-white pb-20">
       <div className="p-6">
-        <h1 className="text-3xl font-bold mb-6 text-yellow-400">Profile</h1>
+        {/* User Info Header */}
+        <div className="bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 rounded-2xl p-6 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-3xl">
+              {firebase.user?.firstName?.[0] || '👤'}
+            </div>
+            <div>
+              <div className="text-2xl font-bold text-white">
+                {firebase.user?.firstName} {firebase.user?.lastName}
+              </div>
+              <div className="text-sm text-gray-400">
+                @{firebase.user?.username}
+              </div>
+              <div className="text-xs text-yellow-400 mt-1">
+                ID: {firebase.user?.id}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h2 className="text-xl font-bold mb-4 text-yellow-400">Balances</h2>
 
         <div className="space-y-4">
           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
@@ -347,15 +381,31 @@ const TradingTerminal = () => {
           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
             <div className="text-sm text-gray-400 mb-1">$BLOB Holdings</div>
             <div className="text-3xl font-bold text-yellow-400">{formatNumber(balance.balanceBLOB)} $BLOB</div>
+            {balance.balanceBLOB > 0 && market.currentPrice > 0 && (
+              <div className="text-xs text-gray-400 mt-1">
+                ≈ {formatNumber(balance.balanceBLOB * market.currentPrice)} BC
+              </div>
+            )}
           </div>
 
+          <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+            <div className="text-sm text-gray-400 mb-1">Total Portfolio Value</div>
+            <div className="text-3xl font-bold text-green-400">
+              {formatNumber(balance.balanceBC + (balance.balanceBLOB * market.currentPrice))} BC
+            </div>
+          </div>
+        </div>
+
+        <h2 className="text-xl font-bold mb-4 mt-6 text-yellow-400">Mining Stats</h2>
+
+        <div className="space-y-4">
           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
             <div className="text-sm text-gray-400 mb-1">Total Mined</div>
             <div className="text-3xl font-bold text-white">{formatNumber(mining.totalMined)} BC</div>
           </div>
 
           <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-            <div className="text-sm text-gray-400 mb-2">Mining Stats</div>
+            <div className="text-sm text-gray-400 mb-2">Current Stats</div>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-400">Click Power:</span>
@@ -368,6 +418,31 @@ const TradingTerminal = () => {
             </div>
           </div>
         </div>
+
+        {/* Market Stats */}
+        {market.stats24h && (
+          <>
+            <h2 className="text-xl font-bold mb-4 mt-6 text-yellow-400">Market Stats (24h)</h2>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div className="text-xs text-gray-400 mb-1">Volume</div>
+                <div className="text-lg font-bold text-white">{formatNumber(market.stats24h.volume_24h)}</div>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div className="text-xs text-gray-400 mb-1">Trades</div>
+                <div className="text-lg font-bold text-white">{market.stats24h.trades_24h}</div>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div className="text-xs text-gray-400 mb-1">High</div>
+                <div className="text-lg font-bold text-green-400">{market.stats24h.high_24h.toFixed(2)}</div>
+              </div>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <div className="text-xs text-gray-400 mb-1">Low</div>
+                <div className="text-lg font-bold text-red-400">{market.stats24h.low_24h.toFixed(2)}</div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Bottom Navigation */}

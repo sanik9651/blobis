@@ -127,6 +127,7 @@ export const useFirebase = () => {
 
   return {
     userId,
+    user: userData,  // Export full user data
     userData,
     saveUserData,
     loadUserData,
