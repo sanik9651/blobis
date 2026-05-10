@@ -135,8 +135,12 @@ async def health_check():
 
 # Монтируем статические файлы для assets (JS, CSS)
 if static_files_mounted:
-    app.mount("/assets", StaticFiles(directory=os.path.join(static_dir, "assets")), name="assets")
-    logger.info(f"Assets mounted from {static_dir}/assets")
+    assets_dir = os.path.join(static_dir, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+        logger.info(f"Assets mounted from {assets_dir}")
+    else:
+        logger.warning(f"Assets directory not found: {assets_dir}")
 
 # Catch-all route для SPA - должен быть ПОСЛЕДНИМ
 @app.get("/{full_path:path}")
