@@ -250,14 +250,15 @@ async def shutdown_event():
     """Очистка ресурсов при остановке"""
     logger.info("Приложение завершает работу.")
 
-# Монтируем статические файлы в самом конце (после всех API роутов)
-# Это позволяет React Router обрабатывать все неизвестные пути
-if static_files_mounted:
-    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
-    logger.info(f"Static files mounted at root path from {static_dir}")
-
 # Если запускаем локально, то используем uvicorn
 if __name__ == "__main__":
     import os
     port = int(os.getenv("PORT", SERVER_PORT))
     uvicorn.run(app, host=SERVER_HOST, port=port)
+
+# Монтируем статические файлы в самом конце (после всех API роутов)
+# ВАЖНО: Это должно быть на уровне модуля, не внутри if __name__
+# Это позволяет React Router обрабатывать все неизвестные пути
+if static_files_mounted:
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+    logger.info(f"Static files mounted at root path from {static_dir}")
