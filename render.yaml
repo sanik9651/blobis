@@ -1,11 +1,11 @@
 services:
   - type: web
     name: blobis
-    env: python
+    env: docker
     region: frankfurt
     plan: free
-    buildCommand: "pip install -r requirements.txt && npm install && npm run build"
-    startCommand: "uvicorn backend:app --host 0.0.0.0 --port $PORT --log-level info"
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     envVars:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
