@@ -85,6 +85,22 @@ async def health_check():
     """Health check endpoint for monitoring"""
     return {"status": "ok", "service": "blobis-api"}
 
+# Монтируем статические файлы для assets (JS, CSS)
+if static_files_mounted:
+    app.mount("/assets", StaticFiles(directory=os.path.join(static_dir, "assets")), name="assets")
+    logger.info(f"Assets mounted from {static_dir}/assets")
+
+# Catch-all route для SPA - должен быть ПОСЛЕДНИМ
+@app.get("/{full_path:path}")
+async def serve_spa(full_path: str):
+    """Serve SPA for all non-API routes"""
+    if static_files_mounted:
+        index_file = os.path.join(static_dir, "index.html")
+        if os.path.exists(index_file):
+            from fastapi.responses import FileResponse
+            return FileResponse(index_file)
+    return {"detail": "Not Found"}
+
 @app.post(WEBHOOK_PATH)
 async def bot_webhook(request: Request, background_tasks: BackgroundTasks):
     """Обработка обновлений от Telegram."""
@@ -255,10 +271,3 @@ if __name__ == "__main__":
     import os
     port = int(os.getenv("PORT", SERVER_PORT))
     uvicorn.run(app, host=SERVER_HOST, port=port)
-
-# Монтируем статические файлы в самом конце (после всех API роутов)
-# ВАЖНО: Это должно быть на уровне модуля, не внутри if __name__
-# Это позволяет React Router обрабатывать все неизвестные пути
-if static_files_mounted:
-    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
-    logger.info(f"Static files mounted at root path from {static_dir}")
