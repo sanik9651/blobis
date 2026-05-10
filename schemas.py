@@ -124,3 +124,48 @@ class Location(BaseModel):
 
     class Config:
         from_attributes = True
+
+# Market schemas
+class TradeRequest(BaseModel):
+    user_id: int
+    trade_type: str  # "BUY" or "SELL"
+    amount: float
+    max_slippage: float = 5.0  # Maximum acceptable slippage in %
+
+class TradeResponse(BaseModel):
+    success: bool
+    trade_id: Optional[str] = None
+    amount_in: float
+    amount_out: float
+    price: float
+    slippage: float
+    fee: float
+    new_balance_bc: float
+    new_balance_blob: float
+    hash: str
+    timestamp: datetime
+
+class MarketPool(BaseModel):
+    pool_bc: float
+    pool_blob: float
+    k: float
+    current_price: float
+    last_update: datetime
+
+class Candle(BaseModel):
+    timestamp: int
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: float
+    trades: int
+
+class MarketStats(BaseModel):
+    volume_24h: float
+    high_24h: float
+    low_24h: float
+    change_24h: float
+    change_percent_24h: float
+    trades_24h: int
+    current_price: float

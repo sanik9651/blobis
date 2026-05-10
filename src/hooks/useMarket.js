@@ -1,36 +1,75 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
 
-const INITIAL_POOL_BC = 1000000; // 1M Blobis Coins
-const INITIAL_POOL_BLOB = 10000; // 10K $BLOB tokens
+const API_BASE = import.meta.env.VITE_API_URL || 'https://blobis-gqla.onrender.com';
 const TRADING_FEE = 0.003; // 0.3% fee
-const CANDLE_INTERVAL = 60000; // 1 minute candles
 
-export const useMarket = () => {
-  const [poolBC, setPoolBC] = useState(INITIAL_POOL_BC);
-  const [poolBLOB, setPoolBLOB] = useState(INITIAL_POOL_BLOB);
+export const useMarket = (userId) => {
+  const [poolBC, setPoolBC] = useState(0);
+  const [poolBLOB, setPoolBLOB] = useState(0);
+  const [currentPrice, setCurrentPrice] = useState(0);
   const [candles, setCandles] = useState([]);
-  const [currentCandle, setCurrentCandle] = useState(null);
   const [trades, setTrades] = useState([]);
-  const [orderBook, setOrderBook] = useState({ bids: [], asks: [] });
+  const [stats24h, setStats24h] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const lastCandleTime = useRef(Date.now());
-  const k = useRef(INITIAL_POOL_BC * INITIAL_POOL_BLOB);
+  // Fetch global pool state
+  const fetchPool = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/market/pool`);
+      if (!response.ok) throw new Error('Failed to fetch pool');
 
-  // Calculate current price using AMM formula
-  const getCurrentPrice = useCallback(() => {
-    return poolBC / poolBLOB;
-  }, [poolBC, poolBLOB]);
+      const data = await response.json();
+      setPoolBC(data.pool_bc);
+      setPoolBLOB(data.pool_blob);
+      setCurrentPrice(data.current_price);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching pool:', err);
+      setError(err.message);
+    }
+  }, []);
 
-  // Calculate slippage for a given trade
+  // Fetch 24h statistics
+  const fetchStats = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/market/stats`);
+      if (!response.ok) throw new Error('Failed to fetch stats');
+
+      const data = await response.json();
+      setStats24h(data);
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+    }
+  }, []);
+
+  // Fetch candles for timeframe
+  const fetchCandles = useCallback(async (timeframe = '1m', candleLimit = 100) => {
+    try {
+      const response = await fetch(`${API_BASE}/api/market/candles/${timeframe}?limit=${candleLimit}`);
+      if (!response.ok) throw new Error('Failed to fetch candles');
+
+      const data = await response.json();
+      setCandles(data.candles || []);
+    } catch (err) {
+      console.error('Error fetching candles:', err);
+    }
+  }, []);
+
+  // Calculate slippage for a given trade (client-side preview)
   const calculateSlippage = useCallback((amountIn, isBuying) => {
-    const currentPrice = getCurrentPrice();
+    if (!poolBC || !poolBLOB) return null;
+
+    const k = poolBC * poolBLOB;
     let amountOut, newPrice, slippage;
 
     if (isBuying) {
       // Buying $BLOB with BC
       const amountInAfterFee = amountIn * (1 - TRADING_FEE);
       const newPoolBC = poolBC + amountInAfterFee;
-      const newPoolBLOB = k.current / newPoolBC;
+      const newPoolBLOB = k / newPoolBC;
       amountOut = poolBLOB - newPoolBLOB;
       newPrice = newPoolBC / newPoolBLOB;
       slippage = ((newPrice - currentPrice) / currentPrice) * 100;
@@ -38,7 +77,7 @@ export const useMarket = () => {
       // Selling $BLOB for BC
       const amountInAfterFee = amountIn * (1 - TRADING_FEE);
       const newPoolBLOB = poolBLOB + amountInAfterFee;
-      const newPoolBC = k.current / newPoolBLOB;
+      const newPoolBC = k / newPoolBLOB;
       amountOut = poolBC - newPoolBC;
       newPrice = newPoolBC / newPoolBLOB;
       slippage = ((currentPrice - newPrice) / currentPrice) * 100;
@@ -52,211 +91,133 @@ export const useMarket = () => {
       effectivePrice: isBuying ? amountIn / amountOut : amountOut / amountIn,
       fee: amountIn * TRADING_FEE
     };
-  }, [poolBC, poolBLOB, getCurrentPrice]);
+  }, [poolBC, poolBLOB, currentPrice]);
 
-  // Execute market order
-  const executeMarketOrder = useCallback((amountIn, isBuying) => {
-    const result = calculateSlippage(amountIn, isBuying);
-
-    if (isBuying) {
-      const amountInAfterFee = amountIn * (1 - TRADING_FEE);
-      const newPoolBC = poolBC + amountInAfterFee;
-      const newPoolBLOB = k.current / newPoolBC;
-
-      setPoolBC(newPoolBC);
-      setPoolBLOB(newPoolBLOB);
-    } else {
-      const amountInAfterFee = amountIn * (1 - TRADING_FEE);
-      const newPoolBLOB = poolBLOB + amountInAfterFee;
-      const newPoolBC = k.current / newPoolBLOB;
-
-      setPoolBC(newPoolBC);
-      setPoolBLOB(newPoolBLOB);
+  // Execute market order through backend API
+  const executeMarketOrder = useCallback(async (amountIn, isBuying, maxSlippage = 5.0) => {
+    if (!userId) {
+      throw new Error('User ID required for trading');
     }
 
-    const trade = {
-      timestamp: Date.now(),
-      type: isBuying ? 'BUY' : 'SELL',
-      price: result.effectivePrice,
-      amount: result.amountOut,
-      amountIn,
-      fee: result.fee,
-      slippage: result.slippage
-    };
+    try {
+      const response = await fetch(`${API_BASE}/api/market/trade`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          trade_type: isBuying ? 'BUY' : 'SELL',
+          amount: amountIn,
+          max_slippage: maxSlippage
+        })
+      });
 
-    setTrades(prev => [trade, ...prev].slice(0, 100));
-    updateCandle(result.effectivePrice, result.amountOut);
-
-    return { ...result, trade };
-  }, [poolBC, poolBLOB, calculateSlippage]);
-
-  // Update current candle with new trade
-  const updateCandle = useCallback((price, volume) => {
-    const now = Date.now();
-
-    setCurrentCandle(prev => {
-      if (!prev) {
-        return {
-          timestamp: now,
-          open: price,
-          high: price,
-          low: price,
-          close: price,
-          volume: volume
-        };
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Trade failed');
       }
 
-      return {
-        ...prev,
-        high: Math.max(prev.high, price),
-        low: Math.min(prev.low, price),
-        close: price,
-        volume: prev.volume + volume
-      };
-    });
-  }, []);
+      const result = await response.json();
 
-  // Finalize candle and start new one
-  const finalizeCandle = useCallback(() => {
-    if (currentCandle) {
-      setCandles(prev => [...prev, currentCandle].slice(-500)); // Keep last 500 candles
-      setCurrentCandle(null);
+      // Refresh pool state after trade
+      await fetchPool();
+      await fetchStats();
+
+      return result;
+    } catch (err) {
+      console.error('Error executing trade:', err);
+      throw err;
     }
-    lastCandleTime.current = Date.now();
-  }, [currentCandle]);
+  }, [userId, fetchPool, fetchStats]);
 
-  // Place limit order
-  const placeLimitOrder = useCallback((price, amount, isBuy) => {
-    const order = {
-      id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      price,
-      amount,
-      type: isBuy ? 'BID' : 'ASK',
-      timestamp: Date.now(),
-      filled: 0
+  // Subscribe to real-time pool updates from Firebase
+  useEffect(() => {
+    if (!db) return;
+
+    const poolRef = collection(db, 'market');
+    const unsubscribe = onSnapshot(poolRef, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.doc.id === 'globalPool') {
+          const data = change.doc.data();
+          setPoolBC(data.poolBC || 0);
+          setPoolBLOB(data.poolBLOB || 0);
+          setCurrentPrice(data.poolBC / data.poolBLOB);
+        }
+      });
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Subscribe to real-time trades from Firebase
+  useEffect(() => {
+    if (!db) return;
+
+    const tradesRef = collection(db, 'market', 'trades', 'recent');
+    const q = query(tradesRef, orderBy('timestamp', 'desc'), limit(100));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const newTrades = [];
+      snapshot.forEach((doc) => {
+        newTrades.push({ id: doc.id, ...doc.data() });
+      });
+      setTrades(newTrades);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Initial data fetch
+  useEffect(() => {
+    const loadInitialData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([
+          fetchPool(),
+          fetchStats(),
+          fetchCandles('1m', 100)
+        ]);
+      } catch (err) {
+        console.error('Error loading initial data:', err);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setOrderBook(prev => {
-      const newBook = { ...prev };
-      if (isBuy) {
-        newBook.bids = [...prev.bids, order].sort((a, b) => b.price - a.price);
-      } else {
-        newBook.asks = [...prev.asks, order].sort((a, b) => a.price - b.price);
-      }
-      return newBook;
-    });
+    loadInitialData();
+  }, [fetchPool, fetchStats, fetchCandles]);
 
-    return order;
-  }, []);
-
-  // Cancel limit order
-  const cancelLimitOrder = useCallback((orderId) => {
-    setOrderBook(prev => ({
-      bids: prev.bids.filter(o => o.id !== orderId),
-      asks: prev.asks.filter(o => o.id !== orderId)
-    }));
-  }, []);
-
-  // Check and execute limit orders
-  const checkLimitOrders = useCallback(() => {
-    const currentPrice = getCurrentPrice();
-
-    setOrderBook(prev => {
-      const newBook = { bids: [...prev.bids], asks: [...prev.asks] };
-      let ordersExecuted = false;
-
-      // Check bid orders (buy orders)
-      newBook.bids = newBook.bids.filter(order => {
-        if (currentPrice <= order.price) {
-          const remaining = order.amount - order.filled;
-          executeMarketOrder(remaining * order.price, true);
-          ordersExecuted = true;
-          return false;
-        }
-        return true;
-      });
-
-      // Check ask orders (sell orders)
-      newBook.asks = newBook.asks.filter(order => {
-        if (currentPrice >= order.price) {
-          const remaining = order.amount - order.filled;
-          executeMarketOrder(remaining, false);
-          ordersExecuted = true;
-          return false;
-        }
-        return true;
-      });
-
-      return ordersExecuted ? newBook : prev;
-    });
-  }, [getCurrentPrice, executeMarketOrder]);
-
-  // Candle management interval
+  // Refresh pool and stats periodically
   useEffect(() => {
     const interval = setInterval(() => {
-      const now = Date.now();
-      if (now - lastCandleTime.current >= CANDLE_INTERVAL) {
-        finalizeCandle();
-      }
-    }, 1000);
+      fetchPool();
+      fetchStats();
+    }, 10000); // Every 10 seconds
 
     return () => clearInterval(interval);
-  }, [finalizeCandle]);
-
-  // Check limit orders periodically
-  useEffect(() => {
-    const interval = setInterval(checkLimitOrders, 500);
-    return () => clearInterval(interval);
-  }, [checkLimitOrders]);
-
-  // Load from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('market_state');
-    if (saved) {
-      try {
-        const state = JSON.parse(saved);
-        setPoolBC(state.poolBC || INITIAL_POOL_BC);
-        setPoolBLOB(state.poolBLOB || INITIAL_POOL_BLOB);
-        setCandles(state.candles || []);
-        setTrades(state.trades || []);
-        setOrderBook(state.orderBook || { bids: [], asks: [] });
-        k.current = state.poolBC * state.poolBLOB;
-      } catch (e) {
-        console.error('Failed to load market state:', e);
-      }
-    }
-  }, []);
-
-  // Save to localStorage
-  useEffect(() => {
-    const state = {
-      poolBC,
-      poolBLOB,
-      candles,
-      trades: trades.slice(0, 100),
-      orderBook
-    };
-    localStorage.setItem('market_state', JSON.stringify(state));
-  }, [poolBC, poolBLOB, candles, trades, orderBook]);
+  }, [fetchPool, fetchStats]);
 
   return {
     // State
     poolBC,
     poolBLOB,
-    currentPrice: getCurrentPrice(),
+    currentPrice,
     candles,
-    currentCandle,
     trades,
-    orderBook,
+    stats24h,
+    loading,
+    error,
 
     // Actions
     executeMarketOrder,
     calculateSlippage,
-    placeLimitOrder,
-    cancelLimitOrder,
+    fetchCandles,
+    refreshPool: fetchPool,
+    refreshStats: fetchStats,
 
     // Constants
     tradingFee: TRADING_FEE,
-    k: k.current
+    k: poolBC * poolBLOB
   };
 };

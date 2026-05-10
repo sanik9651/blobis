@@ -15,6 +15,7 @@ sys.path.append(os.path.dirname(__file__))
 import crud, models, schemas
 from database import SessionLocal, engine
 from ai_utils import generate_fish_image, generate_fish_description, get_ai_response
+from market_service import market_service
 from config import (
     SERVER_HOST, SERVER_PORT, TELEGRAM_BOT_TOKEN, WEBAPP_URL, WEBHOOK_URL, WEBHOOK_PATH, WEBHOOK_SECRET,
     DAILY_BONUS, AUCTION_COMMISSION, REFERRAL_PERCENTAGE, REFERRAL_BONUS,
@@ -234,6 +235,109 @@ def end_tournament_route(tournament_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Could not end tournament")
     return tournament
 
+# ============ MARKET API ============
+
+@app.get("/api/market/pool", response_model=schemas.MarketPool)
+async def get_market_pool():
+    """Get current global liquidity pool state"""
+    pool = market_service.get_global_pool()
+    if pool is None:
+        raise HTTPException(status_code=503, detail="Market service unavailable")
+
+    current_price = pool['poolBC'] / pool['poolBLOB'] if pool['poolBLOB'] > 0 else 0
+
+    return schemas.MarketPool(
+        pool_bc=pool['poolBC'],
+        pool_blob=pool['poolBLOB'],
+        k=pool['k'],
+        current_price=current_price,
+        last_update=pool.get('lastUpdate', datetime.utcnow())
+    )
+
+@app.post("/api/market/trade", response_model=schemas.TradeResponse)
+async def execute_market_trade(trade_request: schemas.TradeRequest, db: Session = Depends(get_db)):
+    """Execute a trade with validation and atomicity"""
+    # Validate user exists
+    user = crud.get_user(db, trade_request.user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Check user balance (this should be in Firebase, but for now check SQLite)
+    if trade_request.trade_type == "BUY":
+        # User needs BC to buy BLOB
+        if user.coins < trade_request.amount:
+            raise HTTPException(status_code=400, detail="Insufficient BC balance")
+    else:
+        # User needs BLOB to sell (check Firebase balance)
+        # TODO: Implement Firebase balance check
+        pass
+
+    try:
+        # Execute trade through market service
+        result = market_service.execute_trade(
+            user_id=trade_request.user_id,
+            trade_type=trade_request.trade_type,
+            amount=trade_request.amount,
+            max_slippage=trade_request.max_slippage
+        )
+
+        if not result:
+            raise HTTPException(status_code=500, detail="Trade execution failed")
+
+        # Update user balance in SQLite (temporary - should be in Firebase)
+        if trade_request.trade_type == "BUY":
+            # Spent BC, received BLOB
+            crud.add_coins(db, trade_request.user_id, -trade_request.amount)
+            new_balance_bc = user.coins - trade_request.amount
+            new_balance_blob = 0  # TODO: Get from Firebase
+        else:
+            # Spent BLOB, received BC
+            crud.add_coins(db, trade_request.user_id, result['amount_out'])
+            new_balance_bc = user.coins + result['amount_out']
+            new_balance_blob = 0  # TODO: Get from Firebase
+
+        return schemas.TradeResponse(
+            success=True,
+            trade_id=result['trade_id'],
+            amount_in=trade_request.amount,
+            amount_out=result['amount_out'],
+            price=result['price'],
+            slippage=result['slippage'],
+            fee=result['fee'],
+            new_balance_bc=new_balance_bc,
+            new_balance_blob=new_balance_blob,
+            hash=result['hash'],
+            timestamp=datetime.utcnow()
+        )
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Trade execution error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@app.get("/api/market/candles/{timeframe}")
+async def get_market_candles(timeframe: str, limit: int = 100):
+    """Get candlestick data for specified timeframe"""
+    valid_timeframes = ['1m', '5m', '15m', '1h', '4h', '1d']
+    if timeframe not in valid_timeframes:
+        raise HTTPException(status_code=400, detail=f"Invalid timeframe. Must be one of: {valid_timeframes}")
+
+    if limit < 1 or limit > 1000:
+        raise HTTPException(status_code=400, detail="Limit must be between 1 and 1000")
+
+    candles = market_service.get_candles(timeframe, limit)
+    return {"timeframe": timeframe, "candles": candles}
+
+@app.get("/api/market/stats", response_model=schemas.MarketStats)
+async def get_market_stats():
+    """Get 24h market statistics"""
+    stats = market_service.get_24h_stats()
+    if stats is None:
+        raise HTTPException(status_code=503, detail="Market service unavailable")
+
+    return schemas.MarketStats(**stats)
+
 @app.on_event("startup")
 async def startup_event():
     """Настройка бота при запуске приложения"""
@@ -249,6 +353,13 @@ async def startup_event():
         logger.error(f"Failed to initialize database: {e}")
     finally:
         db.close()
+
+    # Initialize global market pool
+    try:
+        market_service.initialize_global_pool()
+        logger.info("Global market pool initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize market pool: {e}")
 
     # Настраиваем бота
     telegram_bot.setup_bot()

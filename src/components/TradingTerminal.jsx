@@ -2,15 +2,19 @@ import React, { useState } from 'react';
 import { useMarket } from '../hooks/useMarket';
 import { useMining } from '../hooks/useMining';
 import { useBalance } from '../hooks/useBalance';
+import { useFirebase } from '../hooks/useFirebase';
 import MiningInterface from './MiningInterface';
 
 const TradingTerminal = () => {
   const [activeTab, setActiveTab] = useState('MINING'); // MINING, TRADING, PROFILE
   const [tradeAmount, setTradeAmount] = useState('');
   const [isBuying, setIsBuying] = useState(true);
+  const [isTrading, setIsTrading] = useState(false);
+  const [tradeError, setTradeError] = useState(null);
 
+  const firebase = useFirebase();
   const balance = useBalance();
-  const market = useMarket();
+  const market = useMarket(firebase.user?.id);
   const mining = useMining(balance.addBC);
 
   if (!balance.isLoaded) {
@@ -24,31 +28,48 @@ const TradingTerminal = () => {
     );
   }
 
-  const handleExecuteTrade = () => {
+  const handleExecuteTrade = async () => {
     const amount = parseFloat(tradeAmount);
     if (!amount || amount <= 0) return;
 
+    // Check balance before trade
     if (isBuying) {
-      if (!balance.deductBC(amount)) {
-        alert('Insufficient BC balance');
+      if (balance.balanceBC < amount) {
+        setTradeError('Insufficient BC balance');
         return;
       }
     } else {
-      if (!balance.deductBLOB(amount)) {
-        alert('Insufficient $BLOB balance');
+      if (balance.balanceBLOB < amount) {
+        setTradeError('Insufficient $BLOB balance');
         return;
       }
     }
 
-    const result = market.executeMarketOrder(amount, isBuying);
+    setIsTrading(true);
+    setTradeError(null);
 
-    if (result) {
-      if (isBuying) {
-        balance.addBLOB(result.amountOut);
-      } else {
-        balance.addBC(result.amountOut);
+    try {
+      // Execute trade through backend API
+      const result = await market.executeMarketOrder(amount, isBuying, 5.0);
+
+      if (result && result.success) {
+        // Update local balances based on trade result
+        if (isBuying) {
+          balance.deductBC(amount);
+          balance.addBLOB(result.amount_out);
+        } else {
+          balance.deductBLOB(amount);
+          balance.addBC(result.amount_out);
+        }
+
+        setTradeAmount('');
+        setTradeError(null);
       }
-      setTradeAmount('');
+    } catch (error) {
+      console.error('Trade error:', error);
+      setTradeError(error.message || 'Trade failed. Please try again.');
+    } finally {
+      setIsTrading(false);
     }
   };
 
@@ -118,7 +139,14 @@ const TradingTerminal = () => {
         <div className="p-6 border-b border-white/10">
           <div className="text-center mb-6">
             <div className="text-sm text-gray-400 mb-1">BC/$BLOB Price</div>
-            <div className="text-4xl font-bold text-yellow-400">{market.currentPrice.toFixed(2)}</div>
+            <div className="text-4xl font-bold text-yellow-400">
+              {market.loading ? '...' : market.currentPrice.toFixed(2)}
+            </div>
+            {market.stats24h && (
+              <div className={`text-sm mt-2 ${market.stats24h.change_percent_24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {market.stats24h.change_percent_24h >= 0 ? '+' : ''}{market.stats24h.change_percent_24h.toFixed(2)}% (24h)
+              </div>
+            )}
           </div>
 
           {/* Balances */}
@@ -132,6 +160,24 @@ const TradingTerminal = () => {
               <div className="text-2xl font-bold text-yellow-400">{formatNumber(balance.balanceBLOB)}</div>
             </div>
           </div>
+
+          {/* 24h Stats */}
+          {market.stats24h && (
+            <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
+              <div className="bg-white/5 rounded-lg p-2 text-center border border-white/10">
+                <div className="text-gray-400">24h High</div>
+                <div className="text-green-400 font-bold">{market.stats24h.high_24h.toFixed(2)}</div>
+              </div>
+              <div className="bg-white/5 rounded-lg p-2 text-center border border-white/10">
+                <div className="text-gray-400">24h Low</div>
+                <div className="text-red-400 font-bold">{market.stats24h.low_24h.toFixed(2)}</div>
+              </div>
+              <div className="bg-white/5 rounded-lg p-2 text-center border border-white/10">
+                <div className="text-gray-400">24h Vol</div>
+                <div className="text-white font-bold">{formatNumber(market.stats24h.volume_24h)}</div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Trading Interface */}
@@ -160,6 +206,13 @@ const TradingTerminal = () => {
             </button>
           </div>
 
+          {/* Error Message */}
+          {tradeError && (
+            <div className="mb-4 bg-red-500/10 border border-red-500/50 rounded-xl p-3 text-red-400 text-sm">
+              {tradeError}
+            </div>
+          )}
+
           {/* Amount Input */}
           <div className="mb-6">
             <div className="text-sm text-gray-400 mb-2">
@@ -170,13 +223,15 @@ const TradingTerminal = () => {
               value={tradeAmount}
               onChange={(e) => setTradeAmount(e.target.value)}
               placeholder="0"
-              className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-6 py-4 text-3xl font-bold text-white placeholder-gray-600 focus:outline-none focus:border-yellow-400"
+              disabled={isTrading}
+              className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-6 py-4 text-3xl font-bold text-white placeholder-gray-600 focus:outline-none focus:border-yellow-400 disabled:opacity-50"
             />
             <div className="flex justify-between mt-2 text-sm text-gray-400">
               <span>Available: {isBuying ? formatNumber(balance.balanceBC) : formatNumber(balance.balanceBLOB)}</span>
               <button
                 onClick={() => setTradeAmount(isBuying ? balance.balanceBC.toString() : balance.balanceBLOB.toString())}
                 className="text-yellow-400 font-bold"
+                disabled={isTrading}
               >
                 MAX
               </button>
@@ -212,14 +267,14 @@ const TradingTerminal = () => {
           {/* Execute Button */}
           <button
             onClick={handleExecuteTrade}
-            disabled={!tradeAmount || parseFloat(tradeAmount) <= 0}
+            disabled={!tradeAmount || parseFloat(tradeAmount) <= 0 || isTrading || market.loading}
             className={`w-full py-5 rounded-xl font-bold text-xl shadow-lg transition-all ${
-              tradeAmount && parseFloat(tradeAmount) > 0
+              tradeAmount && parseFloat(tradeAmount) > 0 && !isTrading && !market.loading
                 ? 'bg-yellow-400 text-black hover:bg-yellow-300'
                 : 'bg-white/10 text-gray-600 cursor-not-allowed'
             }`}
           >
-            {isBuying ? 'Buy $BLOB' : 'Sell $BLOB'}
+            {isTrading ? 'Processing...' : isBuying ? 'Buy $BLOB' : 'Sell $BLOB'}
           </button>
 
           {/* Recent Trades */}
@@ -227,21 +282,24 @@ const TradingTerminal = () => {
             <div className="text-lg font-bold mb-4 text-white">Recent Trades</div>
             <div className="space-y-2">
               {market.trades.slice(0, 5).map((trade, i) => (
-                <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-3 flex justify-between items-center">
+                <div key={trade.id || i} className="bg-white/5 border border-white/10 rounded-xl p-3 flex justify-between items-center">
                   <div>
                     <div className={`font-bold ${trade.type === 'BUY' ? 'text-green-400' : 'text-red-400'}`}>
                       {trade.type}
                     </div>
                     <div className="text-xs text-gray-400">
-                      {new Date(trade.timestamp).toLocaleTimeString()}
+                      {trade.timestamp ? new Date(trade.timestamp.seconds * 1000).toLocaleTimeString() : 'Just now'}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-white">{trade.price.toFixed(2)} BC</div>
-                    <div className="text-xs text-gray-400">{trade.amount.toFixed(4)} $BLOB</div>
+                    <div className="font-bold text-white">{trade.price?.toFixed(2) || '0.00'} BC</div>
+                    <div className="text-xs text-gray-400">{trade.amountOut?.toFixed(4) || '0.0000'} $BLOB</div>
                   </div>
                 </div>
               ))}
+              {market.trades.length === 0 && (
+                <div className="text-center text-gray-400 py-8">No recent trades</div>
+              )}
             </div>
           </div>
         </div>

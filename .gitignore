@@ -28,6 +28,9 @@ wheels/
 .env.local
 .env.*.local
 
+# Firebase credentials
+firebase-credentials.json
+
 # IDE
 .vscode/
 .idea/
