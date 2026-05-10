@@ -5,6 +5,8 @@ import { useBalance } from '../hooks/useBalance';
 import { useFirebase } from '../hooks/useFirebase';
 import MiningInterface from './MiningInterface';
 import CandlestickChart from './CandlestickChart';
+import OrderBook from './OrderBook';
+import RecentTrades from './RecentTrades';
 
 const TradingTerminal = () => {
   const [activeTab, setActiveTab] = useState('MINING'); // MINING, TRADING, PROFILE
@@ -16,7 +18,7 @@ const TradingTerminal = () => {
   const firebase = useFirebase();
   const balance = useBalance();
   const market = useMarket(firebase.user?.id);
-  const mining = useMining(balance.addBC);
+  const mining = useMining(balance.addBC, firebase.user?.id);
 
   if (!balance.isLoaded) {
     return (
@@ -188,18 +190,37 @@ const TradingTerminal = () => {
 
         {/* Trading Interface */}
         <div className="p-6">
-          {/* Candlestick Chart */}
-          {market.candles.length > 0 && (
-            <div className="mb-6 bg-white/5 border border-white/10 rounded-xl p-4 overflow-x-auto">
-              <div className="text-sm font-bold text-white mb-3">Price Chart</div>
-              <CandlestickChart
-                candles={market.candles}
-                currentCandle={null}
-                width={Math.min(window.innerWidth - 80, 600)}
-                height={300}
+          {/* Chart and Order Book Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+            {/* Candlestick Chart - Takes 2 columns */}
+            <div className="lg:col-span-2">
+              {market.candles.length > 0 && (
+                <div className="bg-black/40 border border-white/10 rounded-xl p-4 overflow-x-auto">
+                  <div className="text-sm font-bold text-white mb-3">Price Chart (1m)</div>
+                  <CandlestickChart
+                    candles={market.candles}
+                    currentCandle={null}
+                    width={Math.min(window.innerWidth - 80, 600)}
+                    height={300}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Order Book - Takes 1 column */}
+            <div className="lg:col-span-1">
+              <OrderBook
+                poolBC={market.poolBC}
+                poolBLOB={market.poolBLOB}
+                currentPrice={market.currentPrice}
               />
             </div>
-          )}
+          </div>
+
+          {/* Recent Trades */}
+          <div className="mb-6">
+            <RecentTrades trades={market.trades} />
+          </div>
 
           {/* Buy/Sell Toggle */}
           <div className="flex gap-2 mb-6">

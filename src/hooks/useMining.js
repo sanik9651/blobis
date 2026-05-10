@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 const INITIAL_HASHRATE = 1; // Base hashrate per click
 const INITIAL_BALANCE = 1000; // Starting BC balance
+const API_BASE = import.meta.env.VITE_API_URL || 'https://blobis-gqla.onrender.com';
+const SYNC_INTERVAL = 10000; // Sync to backend every 10 seconds
 
 const UPGRADES = {
   clickPower: {
@@ -54,8 +56,9 @@ const UPGRADES = {
   }
 };
 
-export const useMining = (onEarnBC) => {
+export const useMining = (onEarnBC, userId) => {
   const [totalMined, setTotalMined] = useState(0);
+  const [pendingSync, setPendingSync] = useState(0);
   const [upgrades, setUpgrades] = useState({
     clickPower: 0,
     cpuMiner: 0,
@@ -67,6 +70,30 @@ export const useMining = (onEarnBC) => {
 
   const lastUpdateRef = useRef(Date.now());
   const animationFrameRef = useRef(null);
+  const lastSyncRef = useRef(Date.now());
+
+  // Sync earnings to backend
+  const syncToBackend = useCallback(async (amount) => {
+    if (!userId || amount <= 0) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/api/user/${userId}/mine`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`Synced ${amount.toFixed(2)} BC to backend. New balance: ${data.new_balance}`);
+        setPendingSync(0);
+        return true;
+      }
+    } catch (error) {
+      console.error('Failed to sync mining to backend:', error);
+    }
+    return false;
+  }, [userId]);
 
   // Calculate current click power
   const getClickPower = useCallback(() => {
@@ -96,6 +123,7 @@ export const useMining = (onEarnBC) => {
     const power = getClickPower();
     if (onEarnBC) onEarnBC(power);
     setTotalMined(prev => prev + power);
+    setPendingSync(prev => prev + power);
     return power;
   }, [getClickPower, onEarnBC]);
 
@@ -126,6 +154,7 @@ export const useMining = (onEarnBC) => {
         const earned = passiveIncome * deltaTime;
         if (onEarnBC) onEarnBC(earned);
         setTotalMined(prev => prev + earned);
+        setPendingSync(prev => prev + earned);
       }
 
       animationFrameRef.current = requestAnimationFrame(loop);
@@ -140,6 +169,26 @@ export const useMining = (onEarnBC) => {
       }
     };
   }, [getPassiveIncome, onEarnBC]);
+
+  // Periodic sync to backend
+  useEffect(() => {
+    const syncInterval = setInterval(() => {
+      if (pendingSync > 0.01) {
+        syncToBackend(pendingSync);
+      }
+    }, SYNC_INTERVAL);
+
+    return () => clearInterval(syncInterval);
+  }, [pendingSync, syncToBackend]);
+
+  // Sync on unmount
+  useEffect(() => {
+    return () => {
+      if (pendingSync > 0.01) {
+        syncToBackend(pendingSync);
+      }
+    };
+  }, [pendingSync, syncToBackend]);
 
   // Load from localStorage
   useEffect(() => {
@@ -164,6 +213,7 @@ export const useMining = (onEarnBC) => {
           if (offlineEarnings > 0) {
             onEarnBC(offlineEarnings);
             setTotalMined(prev => prev + offlineEarnings);
+            setPendingSync(prev => prev + offlineEarnings);
           }
         }
       } catch (e) {
@@ -190,6 +240,7 @@ export const useMining = (onEarnBC) => {
     mine,
     purchaseUpgrade,
     getUpgradeCost,
-    UPGRADES
+    UPGRADES,
+    pendingSync
   };
 };

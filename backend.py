@@ -184,6 +184,25 @@ def get_user_data(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
 
+@app.post("/api/user/{user_id}/mine")
+async def mine_coins(user_id: int, amount: float, db: Session = Depends(get_db)):
+    """Add mined coins to user balance"""
+    user = crud.get_user(db, user_id)
+    if not user:
+        # Create new user with initial balance
+        user = crud.create_user(db=db, user_id=user_id, username=f"user_{user_id}")
+        logger.info(f"Created new user {user_id}")
+
+    crud.add_coins(db, user_id, amount)
+    user = crud.get_user(db, user_id)
+
+    return {
+        'success': True,
+        'user_id': user_id,
+        'amount_mined': amount,
+        'new_balance': user.coins
+    }
+
 @app.get("/api/user/{user_id}/balance")
 def get_user_balance(user_id: int, db: Session = Depends(get_db)):
     """Get user's BC and BLOB balances"""
